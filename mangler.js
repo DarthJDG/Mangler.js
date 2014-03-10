@@ -83,6 +83,50 @@ var Mangler = (function() {
 		return res;
 	}
 	
+	fn.toCase = function(str, type) {
+		// Try to break string to words
+		if(!(str instanceof Array)) {
+			str = str.replace(/([a-z][A-Z])([A-Z][a-z])/g, '$1_$2')
+			str = str.replace(/([a-z])([A-Z])/g, '$1_$2');
+			str = str.replace(/([a-zA-Z])([0-9])/g, '$1_$2');
+			str = str.replace(/([0-9])([a-zA-Z])/g, '$1_$2');
+			
+			// At this point, the string is underscored
+			// Handle simple returns before splitting
+			switch(type) {
+				case '_': return str;
+				case 'upper_': return str.toUpperCase();
+				case 'lower_': return str.toLowerCase();
+			}
+			
+			// Convert to array
+			str = str.split('_');
+		}
+		
+		switch(type) {
+			case '_':
+				return str.join('_');
+				
+			case 'upper_':
+				return str.join('_').toUpperCase();
+				
+			case 'lower_':
+				return str.join('_').toLowerCase();
+				
+			case 'title':
+			case 'camel':
+				var i, word;
+				for(i = 0; i < str.length; i++) {
+					word = str[i].toLowerCase();
+					if(word !== '' && type === 'title' || i > 0) {
+						word = word[0].toUpperCase() + word.slice(1);
+					}
+					str[i] = word;
+				}
+				return str.join('');
+		}
+	}
+	
 	fn.each = function(obj, callback) {
 		if(obj instanceof Array) {
 			for(var i = 0; i < obj.length; i++) {
