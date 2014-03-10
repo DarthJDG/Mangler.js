@@ -1,24 +1,24 @@
 /**
  * Mangler.js - JavaScript object processing library
  * Copyright (C) 2014
- * 
+ *
  * See AUTHORS file for the list of contributors.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 var Mangler = (function() {
-	
+
 	function filterToRegExp(filter) {
 		if(filter === '') {
 			filter = '.*';
@@ -26,39 +26,39 @@ var Mangler = (function() {
 			// Each filter should start with [ or .
 			if(filter[0] !== '[' && filter[0] !== '.') filter = '.' + filter;
 			filter = filter.replace(/\|([^\.\[])/g, '|.$1');
-			
+
 			// Escape special characters
 			filter = filter.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
-			
+
 			// RegExp should check for endings
 			filter = '.*' + filter + '$';
-			
+
 			// Handle empty array selectors
 			filter = filter.replace(/\\\[\\\]/g, '\\[\\d+\\]');
-			
+
 			// Handle * selectors
 			filter = filter.replace(/\\\.\\\*/g, '([\\.\\[].*|)');
-			
+
 			// Handle .? selectors (prefix or single item)
 			filter = filter.replace(/\\\.\\\?/g, '\\.[^\\.]*');
-			
+
 			// Handle ? selectors (suffix)
 			filter = filter.replace(/\\\?/g, '[^\\.]*');
-			
+
 			// Handle | selectors (multi)
 			filter = filter.replace(/\\\|/g, '$|.*');
 		}
 		return new RegExp(filter);
 	}
-	
+
 	function ManglerObject(objectArray) {
 		this.items = objectArray;
 	}
-	
+
 	var fn = function(obj) {
 		return new ManglerObject([]).add(obj);
 	}
-	
+
 	fn.clone = function(obj) {
 		var res;
 		if(obj instanceof Array) {
@@ -82,7 +82,7 @@ var Mangler = (function() {
 		}
 		return res;
 	}
-	
+
 	fn.toCase = function(str, type) {
 		// Break string to words
 		if(!(str instanceof Array)) {
@@ -93,7 +93,7 @@ var Mangler = (function() {
 				str = str.replace(/([a-zA-Z])([0-9])/g, '$1_$2');
 				str = str.replace(/([0-9])([a-zA-Z])/g, '$1_$2');
 			}
-			
+
 			// At this point, the string is underscored
 			// Handle simple returns before splitting
 			switch(type) {
@@ -101,21 +101,21 @@ var Mangler = (function() {
 				case 'upper_': return str.toUpperCase();
 				case 'lower_': return str.toLowerCase();
 			}
-			
+
 			// Convert to array
 			str = str.split('_');
 		}
-		
+
 		switch(type) {
 			case '_':
 				return str.join('_');
-				
+
 			case 'upper_':
 				return str.join('_').toUpperCase();
-				
+
 			case 'lower_':
 				return str.join('_').toLowerCase();
-				
+
 			case 'title':
 			case 'camel':
 				var i, word;
@@ -129,7 +129,7 @@ var Mangler = (function() {
 				return str.join('');
 		}
 	}
-	
+
 	fn.each = function(obj, callback) {
 		if(obj instanceof Array) {
 			for(var i = 0; i < obj.length; i++) {
@@ -144,7 +144,7 @@ var Mangler = (function() {
 			}
 		}
 	}
-	
+
 	fn.explore = function(obj, callback, path, state) {
 		if(typeof path != 'string') path = '';
 		if(typeof state != 'undefined') state = fn.merge({}, state);
@@ -154,13 +154,13 @@ var Mangler = (function() {
 			}
 		});
 	}
-	
+
 	fn.merge = function(dst, src) {
 		if(typeof dst != 'object' || typeof src != 'object') return dst;
 		for(var k in src) dst[k] = src[k];
 		return dst;
 	}
-	
+
 	ManglerObject.prototype.add = function(obj) {
 		if(typeof obj != 'undefined') {
 			if(obj instanceof Array) {
@@ -171,23 +171,23 @@ var Mangler = (function() {
 		}
 		return this;
 	}
-	
+
 	ManglerObject.prototype.clone = function() {
 		return new ManglerObject(fn.clone(this.items));
 	}
-	
+
 	ManglerObject.prototype.each = function(callback) {
 		if(typeof callback != 'function') return this;
 		fn.each(this.items, callback);
 		return this;
 	}
-	
+
 	ManglerObject.prototype.explore = function(callback, path, state) {
 		if(typeof callback != 'function') return this;
 		fn.explore(this.items, callback, path, state);
 		return this;
 	}
-	
+
 	ManglerObject.prototype.extract = function(filter, options) {
 		// Process filters
 		if(filter instanceof Array) {
@@ -199,7 +199,7 @@ var Mangler = (function() {
 				return this;
 			}
 		}
-		
+
 		// Apply default options
 		var op = fn.clone(fn.merge({
 			method: 'add',
@@ -209,7 +209,7 @@ var Mangler = (function() {
 		}, options));
 		op.key = op.key === true ? 'key' : op.key;
 		op.prop = op.prop === true ? 'prop' : op.prop;
-		
+
 		var mangler = this;
 		var items = this.items;
 		this.items = [];
@@ -240,21 +240,21 @@ var Mangler = (function() {
 						}
 					}
 				}
-				
+
 				// Add to items with the preferred method
 				if(op.method === 'add') {
 					mangler.add(v);
 				} else {
 					mangler.push(v);
 				}
-				
+
 				// Drill down into a matched object?
 				if(!op.drilldown) return false;
 			}
 		}, '', {});
 		return this;
 	}
-	
+
 	ManglerObject.prototype.flatten = function(options) {
 		// Apply default options
 		var op = fn.clone(fn.merge({
@@ -268,11 +268,11 @@ var Mangler = (function() {
 				// This object needs to be flattened
 				var more = false;
 				var limit = op.limit;
-				
+
 				do {
 					// Create a new object to store the flattened items
 					var o = {};
-					
+
 					// Iterate through all properties
 					more = false;
 					fn.each(obj, function(prop, val) {
@@ -288,18 +288,18 @@ var Mangler = (function() {
 							delete obj[prop];
 						}
 					});
-					
+
 					// Merge new flattened items back into object
 					fn.merge(obj, o);
 				} while(more && (op.limit == 0 || --limit > 0))
-				
+
 				// Don't go any deeper into the object
 				return false;
 			}
 		});
 		return this;
 	}
-	
+
 	ManglerObject.prototype.index = function(field) {
 		var index = {};
 		fn.each(this.items, function(i, v) {
@@ -307,19 +307,19 @@ var Mangler = (function() {
 		});
 		return index;
 	}
-	
+
 	ManglerObject.prototype.push = function(obj) {
 		if(typeof obj != 'undefined') {
 			this.items.push(obj);
 		}
 		return this;
 	}
-	
+
 	ManglerObject.prototype.remove = function(item) {
 		var i = this.items.indexOf(item);
 		if(i > -1) this.items.splice(i, 1);
 	}
-	
+
 	return fn;
-	
+
 })();
