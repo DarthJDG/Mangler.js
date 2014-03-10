@@ -52,13 +52,7 @@ var Mangler = (function() {
 	}
 	
 	var fn = function(obj) {
-		if(typeof obj == 'undefined') {
-			return new ManglerObject([]);
-		} else if(obj instanceof Array) {
-			return new ManglerObject(obj);
-		} else {
-			return new ManglerObject([obj]);
-		}
+		return new ManglerObject([]).add(obj);
 	}
 	
 	fn.clone = function(obj) {
