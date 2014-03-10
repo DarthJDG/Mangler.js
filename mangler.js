@@ -312,6 +312,11 @@ var Mangler = (function() {
 		return this;
 	}
 	
+	ManglerObject.prototype.remove = function(item) {
+		var i = this.items.indexOf(item);
+		if(i > -1) this.items.splice(i, 1);
+	}
+	
 	return fn;
 	
 })();
