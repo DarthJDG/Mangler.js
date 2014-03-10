@@ -255,7 +255,8 @@ var Mangler = (function() {
 	ManglerObject.prototype.flatten = function(options) {
 		// Apply default options
 		var op = fn.clone(fn.merge({
-			limit: 0
+			limit: 0,
+			toCase: '_'
 		}, options));
 
 		// Iterate through all top-level objects
@@ -274,7 +275,11 @@ var Mangler = (function() {
 					fn.each(obj, function(prop, val) {
 						if(typeof val == 'object') {
 							fn.each(val, function(k, v) {
-								o[prop + '_' + k] = v;
+								if(op.toCase === '_') {
+									o[prop + '_' + k] = v;
+								} else {
+									o[fn.toCase(prop + '_' + k, op.toCase)] = v;
+								}
 								if(typeof v == 'object') more = true;
 							});
 							delete obj[prop];
