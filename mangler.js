@@ -23,8 +23,9 @@ var Mangler = (function() {
 		if(filter === '') {
 			filter = '.*';
 		} else {
-			// Filter should start with [ or .
+			// Each filter should start with [ or .
 			if(filter[0] !== '[' && filter[0] !== '.') filter = '.' + filter;
+			filter = filter.replace(/\|([^\.\[])/g, '|.$1');
 			
 			// Escape special characters
 			filter = filter.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
@@ -43,6 +44,9 @@ var Mangler = (function() {
 			
 			// Handle ? selectors (suffix)
 			filter = filter.replace(/\\\?/g, '[^\\.]*');
+			
+			// Handle | selectors (multi)
+			filter = filter.replace(/\\\|/g, '$|.*');
 		}
 		return new RegExp(filter);
 	}
@@ -138,7 +142,10 @@ var Mangler = (function() {
 	}
 	
 	ManglerObject.prototype.extract = function(filter, options) {
-		if(!(filter instanceof RegExp)) {
+		// Process filters
+		if(filter instanceof Array) {
+			filter = filterToRegExp(filter.join('|'))
+		} else if(!(filter instanceof RegExp)) {
 			if(typeof filter == 'string') {
 				filter = filterToRegExp(filter);
 			} else {
