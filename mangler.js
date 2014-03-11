@@ -51,12 +51,12 @@ var Mangler = (function() {
 		return new RegExp(filter);
 	}
 
-	function ManglerObject(objectArray) {
-		this.items = objectArray;
+	function ManglerObject(items) {
+		this.items = items;
 	}
 
-	var fn = function(obj) {
-		return new ManglerObject([]).add(obj);
+	var fn = function(item) {
+		return new ManglerObject([]).add(item);
 	}
 
 	fn.clone = function(obj) {
@@ -161,12 +161,12 @@ var Mangler = (function() {
 		return dst;
 	}
 
-	ManglerObject.prototype.add = function(obj) {
-		if(typeof obj != 'undefined') {
-			if(obj instanceof Array) {
-				this.items = this.items.concat(obj);
+	ManglerObject.prototype.add = function(item) {
+		if(typeof item != 'undefined') {
+			if(item instanceof Array) {
+				this.items = this.items.concat(item);
 			} else {
-				this.items.push(obj);
+				this.items.push(item);
 			}
 		}
 		return this;
@@ -300,17 +300,17 @@ var Mangler = (function() {
 		return this;
 	}
 
-	ManglerObject.prototype.index = function(field) {
+	ManglerObject.prototype.index = function(prop) {
 		var index = {};
 		fn.each(this.items, function(i, v) {
-			index[v[field]] = v;
+			index[v[prop]] = v;
 		});
 		return index;
 	}
 
-	ManglerObject.prototype.push = function(obj) {
-		if(typeof obj != 'undefined') {
-			this.items.push(obj);
+	ManglerObject.prototype.push = function(item) {
+		if(typeof item != 'undefined') {
+			this.items.push(item);
 		}
 		return this;
 	}
