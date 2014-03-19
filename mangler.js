@@ -140,28 +140,32 @@ var Mangler = (function() {
 	fn.each = function(obj, callback) {
 		var item, i, k;
 
-		if(fn.isArray(obj)) {
-			for(i = 0; i < obj.length; i++) {
-				item = obj[i];
-				if(typeof item != 'undefined') {
-					callback(i, item);
+		if(fn.isFunction(callback)) {
+			if(fn.isArray(obj)) {
+				for(i = 0; i < obj.length; i++) {
+					item = obj[i];
+					if(typeof item != 'undefined') {
+						callback(i, item);
+					}
 				}
-			}
-		} else if(fn.isObject(obj)) {
-			for(k in obj) {
-				callback(k, obj[k]);
+			} else if(fn.isObject(obj)) {
+				for(k in obj) {
+					callback(k, obj[k]);
+				}
 			}
 		}
 	}
 
 	fn.explore = function(obj, callback, path, state) {
-		if(typeof path != 'string') path = '';
-		if(typeof state != 'undefined') state = fn.merge({}, state);
-		fn.each(obj, function(k, v) {
-			if(callback(k, v, path, state) !== false && (fn.isArray(v) || fn.isObject(v))) {
-				fn.explore(v, callback, path + (fn.isArray(obj) ? '[' + k + ']' : '.' + k), state);
-			}
-		});
+		if(fn.isFunction(callback)) {
+			if(typeof path != 'string') path = '';
+			if(typeof state != 'undefined') state = fn.merge({}, state);
+			fn.each(obj, function(k, v) {
+				if(callback(k, v, path, state) !== false && (fn.isArray(v) || fn.isObject(v))) {
+					fn.explore(v, callback, path + (fn.isArray(obj) ? '[' + k + ']' : '.' + k), state);
+				}
+			});
+		}
 	}
 
 	fn.merge = function(dst, src) {
@@ -186,14 +190,16 @@ var Mangler = (function() {
 	}
 
 	ManglerObject.prototype.each = function(callback) {
-		if(typeof callback != 'function') return this;
-		fn.each(this.items, callback);
+		if(fn.isFunction(callback)) {
+			fn.each(this.items, callback);
+		}
 		return this;
 	}
 
 	ManglerObject.prototype.explore = function(callback, path, state) {
-		if(typeof callback != 'function') return this;
-		fn.explore(this.items, callback, path, state);
+		if(fn.isFunction(callback)) {
+			fn.explore(this.items, callback, path, state);
+		}
 		return this;
 	}
 
