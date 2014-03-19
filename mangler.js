@@ -93,26 +93,7 @@ var Mangler = (function() {
 		var i, word;
 
 		// Break string to words
-		if(!fn.isArray(str)) {
-			if(str.indexOf('_') === -1) {
-				// No underscores in the string, try to be clever
-				str = str.replace(/([a-z][A-Z])([A-Z][a-z])/g, '$1_$2')
-				str = str.replace(/([a-z])([A-Z])/g, '$1_$2');
-				str = str.replace(/([a-zA-Z])([0-9])/g, '$1_$2');
-				str = str.replace(/([0-9])([a-zA-Z])/g, '$1_$2');
-			}
-
-			// At this point, the string is underscored
-			// Handle simple returns before splitting
-			switch(type) {
-				case '_': return str;
-				case 'upper_': return str.toUpperCase();
-				case 'lower_': return str.toLowerCase();
-			}
-
-			// Convert to array
-			str = str.split('_');
-		}
+		str = fn.tokenize(str);
 
 		switch(type) {
 			case '_':
@@ -135,6 +116,21 @@ var Mangler = (function() {
 				}
 				return str.join('');
 		}
+	}
+
+	fn.tokenize = function(str) {
+		if(fn.isArray(str)) return str;
+
+		if(str.indexOf('_') === -1) {
+			// No underscores in the string, try to be clever
+			str = str.replace(/([a-z][A-Z])([A-Z][a-z])/g, '$1_$2')
+			str = str.replace(/([a-z])([A-Z])/g, '$1_$2');
+			str = str.replace(/([a-zA-Z])([0-9])/g, '$1_$2');
+			str = str.replace(/([0-9])([a-zA-Z])/g, '$1_$2');
+		}
+
+		// Convert to array
+		return str.split('_');
 	}
 
 	fn.each = function(obj, callback) {
