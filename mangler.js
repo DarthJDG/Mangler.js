@@ -52,11 +52,12 @@ var Mangler = (function() {
 	}
 
 	function ManglerObject(items) {
-		this.items = items;
+		this.items = [];
+		this.add(items);
 	}
 
 	var fn = function(item) {
-		return new ManglerObject([]).add(item);
+		return new ManglerObject(item);
 	}
 
 	fn.clone = function(obj) {
