@@ -96,9 +96,6 @@ var Mangler = (function() {
 		str = fn.tokenize(str);
 
 		switch(type) {
-			case '_':
-				return str.join('_');
-
 			case 'upper_':
 				return str.join('_').toUpperCase();
 
@@ -115,6 +112,10 @@ var Mangler = (function() {
 					str[i] = word;
 				}
 				return str.join('');
+
+			default:
+				// Default to snake_case if no type set
+				return str.join('_');
 		}
 	}
 
