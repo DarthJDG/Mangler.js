@@ -320,10 +320,18 @@ var Mangler = (function() {
 		return this;
 	}
 
-	ManglerObject.prototype.index = function(prop) {
-		var index = {};
+	ManglerObject.prototype.index = function(generator) {
+		var index = {},
+			func = fn.isFunction(generator),
+			ret;
+
 		fn.each(this.items, function(i, v) {
-			index[v[prop]] = v;
+			if(func) {
+				ret = generator(i, v);
+				if(ret !== false) index[ret] = v;
+			} else {
+				index[v[generator]] = v;
+			}
 		});
 		return index;
 	}
