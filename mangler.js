@@ -61,19 +61,20 @@ var Mangler = (function() {
 	}
 
 	fn.clone = function(obj) {
-		var res;
+		var res, item, i, k, v;
+
 		if(obj instanceof Array) {
 			res = [];
-			for(var i = 0; i < obj.length; i++) {
-				var item = obj[i];
+			for(i = 0; i < obj.length; i++) {
+				item = obj[i];
 				if(typeof item != 'undefined' && item != null) {
 					res[i] = fn.clone(item);
 				}
 			}
 		} else if(typeof obj == 'object') {
 			res = {};
-			for(var k in obj) {
-				var v = obj[k];
+			for(k in obj) {
+				v = obj[k];
 				if(typeof v != 'undefined' && v != null) {
 					res[k] = fn.clone(v);
 				}
@@ -85,6 +86,8 @@ var Mangler = (function() {
 	}
 
 	fn.toCase = function(str, type) {
+		var i, word;
+
 		// Break string to words
 		if(!(str instanceof Array)) {
 			if(str.indexOf('_') === -1) {
@@ -119,7 +122,6 @@ var Mangler = (function() {
 
 			case 'title':
 			case 'camel':
-				var i, word;
 				for(i = 0; i < str.length; i++) {
 					word = str[i].toLowerCase();
 					if(word !== '' && type === 'title' || i > 0) {
@@ -132,15 +134,17 @@ var Mangler = (function() {
 	}
 
 	fn.each = function(obj, callback) {
+		var item, i, k;
+
 		if(obj instanceof Array) {
-			for(var i = 0; i < obj.length; i++) {
-				var item = obj[i];
+			for(i = 0; i < obj.length; i++) {
+				item = obj[i];
 				if(typeof item != 'undefined') {
 					callback(i, item);
 				}
 			}
 		} else if(typeof obj == 'object') {
-			for(var k in obj) {
+			for(k in obj) {
 				callback(k, obj[k]);
 			}
 		}
@@ -190,6 +194,10 @@ var Mangler = (function() {
 	}
 
 	ManglerObject.prototype.extract = function(filter, options) {
+		var mangler = this,
+			items = this.items,
+			op;
+
 		// Process filters
 		if(filter instanceof Array) {
 			filter = filterToRegExp(filter.join('|'))
@@ -202,7 +210,7 @@ var Mangler = (function() {
 		}
 
 		// Apply default options
-		var op = fn.clone(fn.merge({
+		op = fn.clone(fn.merge({
 			method: 'add',
 			key: false,
 			prop: false,
@@ -211,13 +219,12 @@ var Mangler = (function() {
 		op.key = op.key === true ? 'key' : op.key;
 		op.prop = op.prop === true ? 'prop' : op.prop;
 
-		var mangler = this;
-		var items = this.items;
 		this.items = [];
 		fn.explore(items, function(k, v, path, state) {
+			var item, i, m;
+
 			path = path + (typeof k != 'string' ? '[' + k + ']' : '.' + k);
 			if(filter.test(path)) {
-				var i, item, m;
 				// Add keys and props to objects
 				if(op.key !== false || op.prop !== false) {
 					if(v instanceof Array) {
@@ -265,14 +272,16 @@ var Mangler = (function() {
 
 		// Iterate through all top-level objects
 		fn.explore(this.items, function(key, obj) {
+			var more, limit, o;
+
 			if(!(obj instanceof Array) && typeof obj == 'object') {
 				// This object needs to be flattened
-				var more = false;
-				var limit = op.limit;
+				more = false;
+				limit = op.limit;
 
 				do {
 					// Create a new object to store the flattened items
-					var o = {};
+					o = {};
 
 					// Iterate through all properties
 					more = false;
