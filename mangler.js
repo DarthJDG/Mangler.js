@@ -60,10 +60,14 @@ var Mangler = (function() {
 		return new ManglerObject(item);
 	}
 
+	fn.isArray = function(obj) { return Object.prototype.toString.call(obj) === '[object Array]'; }
+	fn.isObject = function(obj) { return Object.prototype.toString.call(obj) === '[object Object]'; }
+	fn.isFunction = function(obj) { return Object.prototype.toString.call(obj) === '[object Function]'; }
+
 	fn.clone = function(obj) {
 		var res, item, i, k, v;
 
-		if(obj instanceof Array) {
+		if(fn.isArray(obj)) {
 			res = [];
 			for(i = 0; i < obj.length; i++) {
 				item = obj[i];
@@ -71,7 +75,7 @@ var Mangler = (function() {
 					res[i] = fn.clone(item);
 				}
 			}
-		} else if(typeof obj == 'object') {
+		} else if(fn.isObject(obj)) {
 			res = {};
 			for(k in obj) {
 				v = obj[k];
@@ -89,7 +93,7 @@ var Mangler = (function() {
 		var i, word;
 
 		// Break string to words
-		if(!(str instanceof Array)) {
+		if(!fn.isArray(str)) {
 			if(str.indexOf('_') === -1) {
 				// No underscores in the string, try to be clever
 				str = str.replace(/([a-z][A-Z])([A-Z][a-z])/g, '$1_$2')
@@ -136,14 +140,14 @@ var Mangler = (function() {
 	fn.each = function(obj, callback) {
 		var item, i, k;
 
-		if(obj instanceof Array) {
+		if(fn.isArray(obj)) {
 			for(i = 0; i < obj.length; i++) {
 				item = obj[i];
 				if(typeof item != 'undefined') {
 					callback(i, item);
 				}
 			}
-		} else if(typeof obj == 'object') {
+		} else if(fn.isObject(obj)) {
 			for(k in obj) {
 				callback(k, obj[k]);
 			}
@@ -154,21 +158,21 @@ var Mangler = (function() {
 		if(typeof path != 'string') path = '';
 		if(typeof state != 'undefined') state = fn.merge({}, state);
 		fn.each(obj, function(k, v) {
-			if(callback(k, v, path, state) !== false && typeof v == 'object') {
-				fn.explore(v, callback, path + (obj instanceof Array ? '[' + k + ']' : '.' + k), state);
+			if(callback(k, v, path, state) !== false && (fn.isArray(v) || fn.isObject(v))) {
+				fn.explore(v, callback, path + (fn.isArray(obj) ? '[' + k + ']' : '.' + k), state);
 			}
 		});
 	}
 
 	fn.merge = function(dst, src) {
-		if(typeof dst != 'object' || typeof src != 'object') return dst;
+		if(!fn.isObject(dst) || !fn.isObject(src)) return dst;
 		for(var k in src) dst[k] = src[k];
 		return dst;
 	}
 
 	ManglerObject.prototype.add = function(item) {
 		if(typeof item != 'undefined') {
-			if(item instanceof Array) {
+			if(fn.isArray(item)) {
 				this.items = this.items.concat(item);
 			} else {
 				this.items.push(item);
@@ -199,7 +203,7 @@ var Mangler = (function() {
 			op;
 
 		// Process filters
-		if(filter instanceof Array) {
+		if(fn.isArray(filter)) {
 			filter = filterToRegExp(filter.join('|'))
 		} else if(!(filter instanceof RegExp)) {
 			if(typeof filter == 'string') {
@@ -227,11 +231,11 @@ var Mangler = (function() {
 			if(filter.test(path)) {
 				// Add keys and props to objects
 				if(op.key !== false || op.prop !== false) {
-					if(v instanceof Array) {
+					if(fn.isArray(v)) {
 						if(op.method === 'add') {
 							for(i = 0; i < v.length; i++) {
 								item = v[i];
-								if(!(item instanceof Array) && typeof item == 'object') {
+								if(fn.isObject(item)) {
 									if(op.key !== false) item[op.key] = i;
 									if(op.prop !== false) {
 										m = path.match(/\.([^\.\[]*)$/);
@@ -240,7 +244,7 @@ var Mangler = (function() {
 								}
 							}
 						}
-					} else if(typeof v == 'object') {
+					} else if(fn.isObject(v)) {
 						if(op.key !== false) v[op.key] = k;
 						if(op.prop !== false) {
 							m = path.match(/\.([^\.\[]*)[0-9\[\]]*$/);
@@ -274,7 +278,7 @@ var Mangler = (function() {
 		fn.explore(this.items, function(key, obj) {
 			var more, limit, o;
 
-			if(!(obj instanceof Array) && typeof obj == 'object') {
+			if(fn.isObject(obj)) {
 				// This object needs to be flattened
 				more = false;
 				limit = op.limit;
@@ -286,14 +290,14 @@ var Mangler = (function() {
 					// Iterate through all properties
 					more = false;
 					fn.each(obj, function(prop, val) {
-						if(typeof val == 'object') {
+						if(fn.isArray(val) || fn.isObject(val)) {
 							fn.each(val, function(k, v) {
 								if(op.toCase === '_') {
 									o[prop + '_' + k] = v;
 								} else {
 									o[fn.toCase(prop + '_' + k, op.toCase)] = v;
 								}
-								if(typeof v == 'object') more = true;
+								if(fn.isArray(v) || fn.isObject(v)) more = true;
 							});
 							delete obj[prop];
 						}
