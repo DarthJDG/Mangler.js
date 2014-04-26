@@ -72,6 +72,12 @@ var Mangler = (function() {
 			each: function(obj, callback) {
 				Mangler.each(obj.items, callback);
 			}
+		},
+
+		Date: {
+			clone: function(obj) {
+				return new Date(obj);
+			}
 		}
 	};
 
