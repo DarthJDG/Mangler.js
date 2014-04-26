@@ -60,9 +60,26 @@ var Mangler = (function() {
 		return new ManglerObject(item);
 	}
 
-	fn.isArray = function(obj) { return Object.prototype.toString.call(obj) === '[object Array]'; }
-	fn.isObject = function(obj) { return Object.prototype.toString.call(obj) === '[object Object]'; }
-	fn.isFunction = function(obj) { return Object.prototype.toString.call(obj) === '[object Function]'; }
+	fn.getType = function(obj) {
+		var name;
+
+		if(typeof obj == 'undefined') {
+			name = 'undefined';
+		} else if(obj == null) {
+			name = 'null';
+		} else {
+			name = Object.prototype.toString.call(obj).match(/^\[object (.*)\]$/)[1];
+			if(name == 'Object') {
+				name = obj.constructor.toString().match(/^function (.*)\(/)[1];
+			}
+		}
+
+		return name;
+	}
+
+	fn.isArray = function(obj) { return fn.getType(obj) === 'Array'; }
+	fn.isObject = function(obj) { return fn.getType(obj) === 'Object'; }
+	fn.isFunction = function(obj) { return fn.getType(obj) === 'Function'; }
 
 	fn.clone = function(obj) {
 		var res, item, i, k, v;
