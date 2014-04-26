@@ -60,6 +60,12 @@ var Mangler = (function() {
 		return new ManglerObject(item);
 	}
 
+	var types = {};
+
+	fn.registerType = function(typestring, obj) {
+		types[typestring] = obj;
+	}
+
 	fn.getType = function(obj) {
 		var name;
 
@@ -82,7 +88,7 @@ var Mangler = (function() {
 	fn.isFunction = function(obj) { return fn.getType(obj) === 'Function'; }
 
 	fn.clone = function(obj) {
-		var res, item, i, k, v;
+		var res, item, i, k, v, t;
 
 		if(fn.isArray(obj)) {
 			res = [];
@@ -100,6 +106,9 @@ var Mangler = (function() {
 					res[k] = fn.clone(v);
 				}
 			}
+		} else if(typeof obj == 'object') {
+			t = types[Mangler.getType(obj)];
+			return (t && Mangler.isFunction(t.clone)) ? t.clone(obj) : obj;
 		} else {
 			return obj;
 		}
@@ -152,7 +161,7 @@ var Mangler = (function() {
 	}
 
 	fn.each = function(obj, callback) {
-		var item, i, k;
+		var item, i, k, t;
 
 		if(fn.isFunction(callback)) {
 			if(fn.isArray(obj)) {
@@ -165,6 +174,11 @@ var Mangler = (function() {
 			} else if(fn.isObject(obj)) {
 				for(k in obj) {
 					callback(k, obj[k]);
+				}
+			} else if(typeof obj == 'object') {
+				t = types[Mangler.getType(obj)];
+				if(t && Mangler.isFunction(t.each)) {
+					t.each(obj, callback);
 				}
 			}
 		}
