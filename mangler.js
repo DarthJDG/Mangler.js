@@ -63,7 +63,17 @@ var Mangler = (function() {
 		return new ManglerObject(item);
 	}
 
-	var types = {};
+	var types = {
+		ManglerObject: {
+			clone: function(obj) {
+				return new ManglerObject(Mangler.clone(obj.items));
+			},
+
+			each: function(obj, callback) {
+				Mangler.each(obj.items, callback);
+			}
+		}
+	};
 
 	fn.registerType = function(typestring, obj) {
 		types[typestring] = obj;
