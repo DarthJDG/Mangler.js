@@ -208,8 +208,9 @@ var Mangler = (function() {
 			if(typeof path != 'string') path = '';
 			if(typeof state != 'undefined') state = fn.merge({}, state);
 			fn.each(obj, function(k, v) {
-				if(callback(k, v, path, state) !== false && (fn.isArray(v) || fn.isObject(v))) {
-					fn.explore(v, callback, path + (fn.isArray(obj) ? '[' + k + ']' : '.' + k), state);
+				var t = fn.getType(v);
+				if(callback(k, v, path, state) !== false && (t == 'Array' || t == 'Object' || fn.isFunction(types[t].each))) {
+					fn.explore(v, callback, path + ((typeof k != 'string') ? '[' + k + ']' : '.' + k), state);
 				}
 			});
 		}
