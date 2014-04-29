@@ -115,17 +115,15 @@ var Mangler = (function() {
 			res = [];
 			for(i = 0; i < obj.length; i++) {
 				item = obj[i];
-				if(typeof item != 'undefined' && item != null) {
+				// Filter out undefined for sparse arrays
+				if(typeof item != 'undefined') {
 					res[i] = fn.clone(item);
 				}
 			}
 		} else if(fn.isObject(obj)) {
 			res = {};
 			for(k in obj) {
-				v = obj[k];
-				if(typeof v != 'undefined' && v != null) {
-					res[k] = fn.clone(v);
-				}
+				res[k] = fn.clone(obj[k]);
 			}
 		} else if(typeof obj == 'object') {
 			t = types[fn.getType(obj)];
