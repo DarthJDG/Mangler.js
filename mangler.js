@@ -288,7 +288,7 @@ var Mangler = (function() {
 								if(fn.isObject(item)) {
 									if(op.key !== false) item[op.key] = i;
 									if(op.prop !== false) {
-										m = path.match(/\.([^\.\[]*)$/);
+										m = path.match(/\.([^\.\[]*)[0-9\[\]]*$/);
 										if(m != null) item[op.prop] = m[1];
 									}
 								}
