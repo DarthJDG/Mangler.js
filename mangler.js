@@ -264,12 +264,12 @@ var Mangler = (function() {
 		}
 
 		// Apply default options
-		op = fn.clone(fn.merge({
+		op = fn.merge({
 			method: 'add',
 			key: false,
 			prop: false,
 			drilldown: false
-		}, options));
+		}, options);
 		op.key = op.key === true ? 'key' : op.key;
 		op.prop = op.prop === true ? 'prop' : op.prop;
 
@@ -319,10 +319,10 @@ var Mangler = (function() {
 
 	ManglerObject.prototype.flatten = function(options) {
 		// Apply default options
-		var op = fn.clone(fn.merge({
+		var op = fn.merge({
 			limit: 0,
 			toCase: '_'
-		}, options));
+		}, options);
 
 		// Iterate through all top-level objects
 		fn.explore(this.items, function(key, obj) {
