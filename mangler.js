@@ -66,7 +66,7 @@ var Mangler = (function() {
 	var types = {
 		ManglerObject: {
 			clone: function(obj) {
-				return new ManglerObject(fn.clone(obj.items));
+				return obj.clone();
 			},
 
 			each: function(obj, callback) {
