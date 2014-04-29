@@ -66,11 +66,11 @@ var Mangler = (function() {
 	var types = {
 		ManglerObject: {
 			clone: function(obj) {
-				return new ManglerObject(Mangler.clone(obj.items));
+				return new ManglerObject(fn.clone(obj.items));
 			},
 
 			each: function(obj, callback) {
-				Mangler.each(obj.items, callback);
+				fn.each(obj.items, callback);
 			}
 		},
 
@@ -126,8 +126,8 @@ var Mangler = (function() {
 				}
 			}
 		} else if(typeof obj == 'object') {
-			t = types[Mangler.getType(obj)];
-			return (t && Mangler.isFunction(t.clone)) ? t.clone(obj) : obj;
+			t = types[fn.getType(obj)];
+			return (t && fn.isFunction(t.clone)) ? t.clone(obj) : obj;
 		} else {
 			return obj;
 		}
@@ -195,8 +195,8 @@ var Mangler = (function() {
 					callback(k, obj[k]);
 				}
 			} else if(typeof obj == 'object') {
-				t = types[Mangler.getType(obj)];
-				if(t && Mangler.isFunction(t.each)) {
+				t = types[fn.getType(obj)];
+				if(t && fn.isFunction(t.each)) {
 					t.each(obj, callback);
 				}
 			}
