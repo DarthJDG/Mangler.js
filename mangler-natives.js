@@ -35,7 +35,9 @@
 
 	Mangler.registerType('Error', {
 		clone: function(obj) {
-			return new window[obj.name](obj);
+			var func = window[obj.name];
+			if(!Mangler.isFunction(func)) func = Error;
+			return new func(obj);
 		}
 	});
 
