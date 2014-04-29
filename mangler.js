@@ -238,16 +238,12 @@ var Mangler = (function() {
 	}
 
 	ManglerObject.prototype.each = function(callback) {
-		if(fn.isFunction(callback)) {
-			fn.each(this.items, callback);
-		}
+		fn.each(this.items, callback);
 		return this;
 	}
 
 	ManglerObject.prototype.explore = function(callback, path, state) {
-		if(fn.isFunction(callback)) {
-			fn.explore(this.items, callback, path, state);
-		}
+		fn.explore(this.items, callback, path, state);
 		return this;
 	}
 
