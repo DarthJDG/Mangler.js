@@ -109,7 +109,9 @@ var Mangler = (function() {
 	fn.clone = function(obj) {
 		var res, item, i, k, v, t;
 
-		if(fn.isArray(obj)) {
+		if(typeof obj == 'undefined' || obj === null) {
+			return obj;
+		} else if(fn.isArray(obj)) {
 			res = [];
 			for(i = 0; i < obj.length; i++) {
 				item = obj[i];
