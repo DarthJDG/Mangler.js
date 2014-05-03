@@ -20,11 +20,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-(function() {
+(function(global) {
 	// Generic handler for typed arrays
 	var typedArrayHandler = {
 		clone: function(obj) {
-			var func = window[Mangler.getType(obj)];
+			var func = global[Mangler.getType(obj)];
 			return new func(obj);
 		},
 
@@ -57,7 +57,7 @@
 
 	Mangler.registerType('Error', {
 		clone: function(obj) {
-			var func = window[obj.name];
+			var func = global[obj.name];
 			if(!Mangler.isFunction(func)) func = Error;
 			return new func(obj);
 		}
@@ -80,4 +80,4 @@
 			return new String(obj);
 		}
 	});
-})();
+})(this);
