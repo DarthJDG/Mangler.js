@@ -63,30 +63,32 @@ var Mangler = (function(global) {
 		return new ManglerObject(item);
 	}
 
-	var genericCloneHandler = function(obj) {
-		return obj.clone();
-	}
+	var handlers = {
+		standardClone: function(obj) {
+			return obj.clone();
+		},
 
-	var genericConstructorHandler = function(obj) {
-		var func = types[fn.getType(obj)].constructor;
-		return new func(obj);
-	}
+		standardEach: function(obj, callback) {
+			obj.each(callback);
+		},
 
-	var genericEachHandler = function(obj, callback) {
-		obj.each(callback);
-	}
+		copyConstructor: function(obj) {
+			var func = types[fn.getType(obj)].$constructor;
+			return new func(obj);
+		}
+	};
 
 	var types = {
 		ManglerObject: {
-			clone: genericCloneHandler,
+			clone: true,
 			each: function(obj, callback) {
 				fn.each(obj.items, callback);
 			}
 		},
 
 		Date: {
-			func: Date,
-			clone: genericConstructorHandler
+			$constructor: Date,
+			clone: 'constructor'
 		}
 	};
 
@@ -117,12 +119,44 @@ var Mangler = (function(global) {
 		return name;
 	}
 
+	fn.getIterator = function(type) {
+		if(typeof type !== 'string') type = fn.getType(type);
+
+		var t = types[type];
+		if(!t) return null;
+
+		if(t.each === true) {
+			return handlers.standardEach;
+		} else if(fn.isFunction(t.each)) {
+			return t.each;
+		}
+
+		return null;
+	}
+
+	fn.getCloner = function(type) {
+		if(typeof type !== 'string') type = fn.getType(type);
+
+		var t = types[type];
+		if(!t) return null;
+
+		if(t.clone === true) {
+			return handlers.standardClone;
+		} else if(t.clone === 'constructor' && fn.isFunction(t.$constructor)) {
+			return handlers.copyConstructor;
+		} else if(fn.isFunction(t.clone)) {
+			return t.clone;
+		}
+
+		return null;
+	}
+
 	fn.isArray = function(obj) { return fn.getType(obj) === 'Array'; }
 	fn.isObject = function(obj) { return fn.getType(obj) === 'Object'; }
 	fn.isFunction = function(obj) { return fn.getType(obj) === 'Function'; }
 
 	fn.clone = function(obj) {
-		var res, item, i, k, v, t;
+		var res, item, i, k, v, c;
 
 		if(typeof obj == 'undefined' || obj === null) {
 			return obj;
@@ -141,8 +175,8 @@ var Mangler = (function(global) {
 				res[k] = fn.clone(obj[k]);
 			}
 		} else if(typeof obj == 'object') {
-			t = types[fn.getType(obj)];
-			return (t && fn.isFunction(t.clone)) ? t.clone(obj) : obj;
+			c = fn.getCloner(obj);
+			return c ? c(obj) : obj;
 		} else {
 			return obj;
 		}
@@ -195,7 +229,7 @@ var Mangler = (function(global) {
 	}
 
 	fn.each = function(obj, callback) {
-		var item, i, k, t;
+		var item, i, k, e;
 
 		if(fn.isFunction(callback)) {
 			if(fn.isArray(obj)) {
@@ -210,10 +244,8 @@ var Mangler = (function(global) {
 					callback(k, obj[k]);
 				}
 			} else if(typeof obj == 'object') {
-				t = types[fn.getType(obj)];
-				if(t && fn.isFunction(t.each)) {
-					t.each(obj, callback);
-				}
+				e = fn.getIterator(obj);
+				if(e) e(obj, callback);
 			}
 		}
 	}
@@ -224,7 +256,7 @@ var Mangler = (function(global) {
 			if(typeof state != 'undefined') state = fn.merge({}, state);
 			fn.each(obj, function(k, v) {
 				var t = fn.getType(v);
-				if(callback(k, v, path, state) !== false && (t == 'Array' || t == 'Object' || (types[t] ? fn.isFunction(types[t].each) : false))) {
+				if(callback(k, v, path, state) !== false && (t == 'Array' || t == 'Object' || fn.getIterator(t))) {
 					fn.explore(v, callback, path + ((typeof k != 'string') ? '[' + k + ']' : '.' + k), state);
 				}
 			});
