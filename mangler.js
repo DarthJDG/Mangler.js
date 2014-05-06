@@ -20,7 +20,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-var Mangler = (function() {
+var Mangler = (function(global) {
 
 	function filterToRegExp(filter) {
 		if(filter === '') {
@@ -63,23 +63,38 @@ var Mangler = (function() {
 		return new ManglerObject(item);
 	}
 
+	var genericCloneHandler = function(obj) {
+		return obj.clone();
+	}
+
+	var genericConstructorHandler = function(obj) {
+		var func = types[fn.getType(obj)].constructor;
+		return new func(obj);
+	}
+
+	var genericEachHandler = function(obj, callback) {
+		obj.each(callback);
+	}
+
 	var types = {
 		ManglerObject: {
-			clone: function(obj) {
-				return obj.clone();
-			},
-
+			clone: genericCloneHandler,
 			each: function(obj, callback) {
 				fn.each(obj.items, callback);
 			}
 		},
 
 		Date: {
-			clone: function(obj) {
-				return new Date(obj);
-			}
+			func: Date,
+			clone: genericConstructorHandler
 		}
 	};
+
+	fn.mergeType = function(typestring, obj) {
+		var handler = types[typestring];
+		if(!handler) handler = types[typestring] = {};
+		fn.merge(handler, obj);
+	}
 
 	fn.registerType = function(typestring, obj) {
 		types[typestring] = obj;
@@ -394,4 +409,4 @@ var Mangler = (function() {
 
 	return fn;
 
-})();
+})(this);
