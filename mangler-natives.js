@@ -21,45 +21,41 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 (function(global) {
-	// Generic handler for typed arrays
-	var typedArrayHandler = {
-		clone: function(obj) {
-			var func = global[Mangler.getType(obj)];
-			return new func(obj);
-		},
-
-		each: function(obj, callback) {
-			var item, i;
-			for(i = 0; i < obj.length; i++) {
-				item = obj[i];
-				if(typeof item != 'undefined') {
-					callback(i, item);
-				}
+	// Generic array iterator
+	var arrayIterator = function(obj, callback) {
+		var item, i;
+		for(i = 0; i < obj.length; i++) {
+			item = obj[i];
+			if(typeof item != 'undefined') {
+				callback(i, item);
 			}
 		}
 	};
 
-	Mangler.registerType('Float32Array', typedArrayHandler);
-	Mangler.registerType('Float64Array', typedArrayHandler);
-	Mangler.registerType('Int8Array', typedArrayHandler);
-	Mangler.registerType('Int16Array', typedArrayHandler);
-	Mangler.registerType('Int32Array', typedArrayHandler);
-	Mangler.registerType('Uint8Array', typedArrayHandler);
-	Mangler.registerType('Uint16Array', typedArrayHandler);
-	Mangler.registerType('Uint32Array', typedArrayHandler);
-	Mangler.registerType('Uint8ClampedArray', typedArrayHandler);
+	// List of native typed arrays
+	var typedArrays = [
+		'Float32Array', 'Float64Array',
+		'Int8Array', 'Int16Array', 'Int32Array',
+		'Uint8Array', 'Uint16Array', 'Uint32Array', 'Uint8ClampedArray'
+	];
+
+	// Register typed arrays if they are supported
+	Mangler.each(typedArrays, function(i, type) {
+		var func = global[type];
+		if(func) {
+			Mangler.registerType(type, { $constructor: func, clone: 'constructor', each: arrayIterator });
+		}
+	});
+
+	// Native types with working copy-constructor
+	Mangler.registerType('RegExp', { $constructor: global['RegExp'], clone: 'constructor' });
+	Mangler.registerType('String', { $constructor: global['String'], clone: 'constructor' });
+
+	// Native types with custom handlers
 
 	Mangler.registerType('Boolean', {
 		clone: function(obj) {
 			return new Boolean(obj.valueOf());
-		}
-	});
-
-	Mangler.registerType('Error', {
-		clone: function(obj) {
-			var func = global[obj.name];
-			if(!Mangler.isFunction(func)) func = Error;
-			return new func(obj);
 		}
 	});
 
@@ -69,15 +65,11 @@
 		}
 	});
 
-	Mangler.registerType('RegExp', {
+	Mangler.registerType('Error', {
 		clone: function(obj) {
-			return new RegExp(obj);
-		}
-	});
-
-	Mangler.registerType('String', {
-		clone: function(obj) {
-			return new String(obj);
+			var func = global[obj.name];
+			if(!Mangler.isFunction(func)) func = Error;
+			return new func(obj);
 		}
 	});
 })(this);
