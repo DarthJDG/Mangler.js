@@ -209,7 +209,7 @@ var Mangler = (function() {
 			if(typeof state != 'undefined') state = fn.merge({}, state);
 			fn.each(obj, function(k, v) {
 				var t = fn.getType(v);
-				if(callback(k, v, path, state) !== false && (t == 'Array' || t == 'Object' || fn.isFunction(types[t].each))) {
+				if(callback(k, v, path, state) !== false && (t == 'Array' || t == 'Object' || (types[t] ? fn.isFunction(types[t].each) : false))) {
 					fn.explore(v, callback, path + ((typeof k != 'string') ? '[' + k + ']' : '.' + k), state);
 				}
 			});
