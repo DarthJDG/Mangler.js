@@ -122,6 +122,10 @@ var Mangler = (function(global) {
 	fn.getIterator = function(type) {
 		if(typeof type !== 'string') type = fn.getType(type);
 
+		if(type === 'Object' || type === 'Array') {
+			return fn.each;
+		}
+
 		var t = types[type];
 		if(!t) return null;
 
@@ -136,6 +140,10 @@ var Mangler = (function(global) {
 
 	fn.getCloner = function(type) {
 		if(typeof type !== 'string') type = fn.getType(type);
+
+		if(type === 'Object' || type === 'Array') {
+			return fn.clone;
+		}
 
 		var t = types[type];
 		if(!t) return null;
