@@ -63,6 +63,7 @@ var Mangler = (function(global) {
 		return new ManglerObject(item);
 	}
 
+	// Re-usable handler functions
 	var handlers = {
 		standardClone: function(obj) {
 			return obj.clone();
@@ -77,33 +78,7 @@ var Mangler = (function(global) {
 			return new func(obj);
 		},
 
-		objectClone: function(obj) {
-			var k, res = {};
-			for(k in obj) {
-				res[k] = fn.clone(obj[k]);
-			}
-			return res;
-		},
-
-		objectEach: function(obj, callback) {
-			for(var k in obj) {
-				callback(k, obj[k]);
-			}
-		},
-
-		arrayClone: function(obj) {
-			var i, item, res = [];
-			for(i = 0; i < obj.length; i++) {
-				item = obj[i];
-				// Filter out undefined for sparse arrays
-				if(typeof item !== 'undefined') {
-					res[i] = fn.clone(item);
-				}
-			}
-			return res;
-		},
-
-		arrayEach: function(obj, callback) {
+		arrayLikeEach: function(obj, callback) {
 			var item, i;
 			for(i = 0; i < obj.length; i++) {
 				item = obj[i];
@@ -114,15 +89,38 @@ var Mangler = (function(global) {
 		}
 	};
 
+	// Built-in type handlers
 	var types = {
 		Object: {
-			clone: handlers.objectClone,
-			each: handlers.objectEach
+			clone: function(obj) {
+				var k, res = {};
+				for(k in obj) {
+					res[k] = fn.clone(obj[k]);
+				}
+				return res;
+			},
+
+			each: function(obj, callback) {
+				for(var k in obj) {
+					callback(k, obj[k]);
+				}
+			}
 		},
 
 		Array: {
-			clone: handlers.arrayClone,
-			each: handlers.arrayEach
+			clone: function(obj) {
+				var i, item, res = [];
+				for(i = 0; i < obj.length; i++) {
+					item = obj[i];
+					// Filter out undefined for sparse arrays
+					if(typeof item !== 'undefined') {
+						res[i] = fn.clone(item);
+					}
+				}
+				return res;
+			},
+
+			each: handlers.arrayLikeEach
 		},
 
 		ManglerObject: {
