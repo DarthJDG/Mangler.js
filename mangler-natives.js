@@ -21,17 +21,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 (function(global) {
-	// Generic array iterator
-	var arrayIterator = function(obj, callback) {
-		var item, i;
-		for(i = 0; i < obj.length; i++) {
-			item = obj[i];
-			if(typeof item != 'undefined') {
-				callback(i, item);
-			}
-		}
-	};
-
 	// List of native typed arrays
 	var typedArrays = [
 		'Float32Array', 'Float64Array',
@@ -43,7 +32,7 @@
 	Mangler.each(typedArrays, function(i, type) {
 		var func = global[type];
 		if(func) {
-			Mangler.registerType(type, { $constructor: func, clone: 'constructor', each: arrayIterator });
+			Mangler.registerType(type, { $constructor: func, clone: 'constructor', each: 'array' });
 		}
 	});
 

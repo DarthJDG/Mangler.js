@@ -180,6 +180,8 @@ var Mangler = (function(global) {
 			return t.each;
 		} else if(t.each === true) {
 			return handlers.standardEach;
+		} else if(t.each === 'array') {
+			return handlers.arrayEach;
 		}
 
 		return null;
