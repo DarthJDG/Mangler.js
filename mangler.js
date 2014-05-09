@@ -115,6 +115,8 @@ var Mangler = (function(global) {
 				name = obj.constructor.toString().match(/^function (.*)\(/)[1];
 				if(!name) name = '$unknown';
 			}
+		} else if(typeof obj == 'function') {
+			name = 'function';
 		} else {
 			name = '$value';
 		}
