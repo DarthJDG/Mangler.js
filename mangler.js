@@ -87,7 +87,7 @@ var Mangler = (function(global) {
 			for(i = 0; i < obj.length; i++) {
 				item = obj[i];
 				if(typeof item !== 'undefined') {
-					callback(i, item);
+					if(callback(i, item) === false) return;
 				}
 			}
 		},
@@ -126,7 +126,7 @@ var Mangler = (function(global) {
 
 			each: function(obj, callback) {
 				for(var k in obj) {
-					callback(k, obj[k]);
+					if(callback(k, obj[k]) === false) return;
 				}
 			},
 
