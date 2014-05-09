@@ -73,6 +73,10 @@ var Mangler = (function(global) {
 			obj.each(callback);
 		},
 
+		standardGet: function(obj, i) {
+			return obj.get(i);
+		},
+
 		copyConstructor: function(obj) {
 			var func = types[fn.getType(obj)].$constructor;
 			return new func(obj);
@@ -86,6 +90,26 @@ var Mangler = (function(global) {
 					callback(i, item);
 				}
 			}
+		},
+
+		arrayLikeGet: function(obj, i) {
+			return obj[i];
+		},
+
+		// Provides a fallback get interface for types with iterators. Should be avoided.
+		eachGet: function(obj, i) {
+			var ret, it = fn.getIterator(obj);
+
+			if(typeof it === 'function') {
+				it(obj, function(k, v) {
+					if(k === i) {
+						ret = v;
+						return false;
+					}
+				});
+			}
+
+			return ret;
 		}
 	};
 
@@ -104,7 +128,9 @@ var Mangler = (function(global) {
 				for(var k in obj) {
 					callback(k, obj[k]);
 				}
-			}
+			},
+
+			get: handlers.arrayLikeGet
 		},
 
 		Array: {
@@ -120,14 +146,16 @@ var Mangler = (function(global) {
 				return res;
 			},
 
-			each: handlers.arrayLikeEach
+			each: handlers.arrayLikeEach,
+			get: handlers.arrayLikeGet
 		},
 
 		ManglerObject: {
 			clone: true,
 			each: function(obj, callback) {
 				fn.each(obj.items, callback);
-			}
+			},
+			get: true
 		},
 
 		Date: {
@@ -179,7 +207,7 @@ var Mangler = (function(global) {
 		} else if(t.each === true) {
 			return handlers.standardEach;
 		} else if(t.each === 'array') {
-			return handlers.arrayEach;
+			return handlers.arrayLikeEach;
 		}
 
 		return null;
@@ -197,6 +225,25 @@ var Mangler = (function(global) {
 			return handlers.standardClone;
 		} else if(t.clone === 'constructor' && typeof t.$constructor === 'function') {
 			return handlers.copyConstructor;
+		}
+
+		return null;
+	}
+
+	fn.getGetter = function(type) {
+		if(typeof type !== 'string') type = fn.getType(type);
+
+		var t = types[type];
+		if(!t) return null;
+
+		if(typeof t.get === 'function') {
+			return t.get;
+		} else if(t.get === true) {
+			return handlers.standardGet;
+		} else if(t.get === 'array') {
+			return handlers.arrayLikeGet;
+		} else if(fn.getIterator(type)) {
+			return handlers.eachGet;
 		}
 
 		return null;
@@ -273,6 +320,11 @@ var Mangler = (function(global) {
 				}
 			});
 		}
+	}
+
+	fn.get = function(obj, i) {
+		var g = fn.getGetter(obj);
+		if(g) return g(obj, i);
 	}
 
 	fn.merge = function(dst, src) {
@@ -374,6 +426,10 @@ var Mangler = (function(global) {
 			}
 		}, '', {});
 		return this;
+	}
+
+	ManglerObject.prototype.get = function(i) {
+		return fn.get(this.items, i);
 	}
 
 	ManglerObject.prototype.flatten = function(options) {
