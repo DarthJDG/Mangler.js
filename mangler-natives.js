@@ -57,7 +57,7 @@
 	Mangler.registerType('Error', {
 		clone: function(obj) {
 			var func = global[obj.name];
-			if(!Mangler.isFunction(func)) func = Error;
+			if(typeof func !== 'function') func = Error;
 			return new func(obj);
 		}
 	});
