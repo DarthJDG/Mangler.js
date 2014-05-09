@@ -109,11 +109,14 @@ var Mangler = (function(global) {
 			name = 'undefined';
 		} else if(obj == null) {
 			name = 'null';
-		} else {
+		} else if(typeof obj == 'object') {
 			name = Object.prototype.toString.call(obj).match(/^\[object (.*)\]$/)[1];
 			if(name == 'Object') {
 				name = obj.constructor.toString().match(/^function (.*)\(/)[1];
+				if(!name) name = '$unknown';
 			}
+		} else {
+			name = '$value';
 		}
 
 		return name;
