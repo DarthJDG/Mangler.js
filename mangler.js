@@ -96,7 +96,7 @@ var Mangler = (function(global) {
 			for(i = 0; i < obj.length; i++) {
 				item = obj[i];
 				// Filter out undefined for sparse arrays
-				if(typeof item != 'undefined') {
+				if(typeof item !== 'undefined') {
 					res[i] = fn.clone(item);
 				}
 			}
@@ -107,7 +107,7 @@ var Mangler = (function(global) {
 			var item, i;
 			for(i = 0; i < obj.length; i++) {
 				item = obj[i];
-				if(typeof item != 'undefined') {
+				if(typeof item !== 'undefined') {
 					callback(i, item);
 				}
 			}
@@ -151,17 +151,17 @@ var Mangler = (function(global) {
 	fn.getType = function(obj) {
 		var name;
 
-		if(typeof obj == 'undefined') {
+		if(typeof obj === 'undefined') {
 			name = 'undefined';
-		} else if(obj == null) {
+		} else if(obj === null) {
 			name = 'null';
-		} else if(typeof obj == 'object') {
+		} else if(typeof obj === 'object') {
 			name = Object.prototype.toString.call(obj).match(/^\[object (.*)\]$/)[1];
-			if(name == 'Object') {
+			if(name === 'Object') {
 				name = obj.constructor.toString().match(/^function (.*)\(/)[1];
 				if(!name) name = '$unknown';
 			}
-		} else if(typeof obj == 'function') {
+		} else if(typeof obj === 'function') {
 			name = 'function';
 		} else {
 			name = '$value';
@@ -267,12 +267,12 @@ var Mangler = (function(global) {
 
 	fn.explore = function(obj, callback, path, state) {
 		if(typeof callback === 'function') {
-			if(typeof path != 'string') path = '';
-			if(typeof state != 'undefined') state = fn.merge({}, state);
+			if(typeof path !== 'string') path = '';
+			if(typeof state !== 'undefined') state = fn.merge({}, state);
 			fn.each(obj, function(k, v) {
 				var t = fn.getType(v);
-				if(callback(k, v, path, state) !== false && (t == 'Array' || t == 'Object' || fn.getIterator(t))) {
-					fn.explore(v, callback, path + ((typeof k != 'string') ? '[' + k + ']' : '.' + k), state);
+				if(callback(k, v, path, state) !== false && (t === 'Array' || t === 'Object' || fn.getIterator(t))) {
+					fn.explore(v, callback, path + ((typeof k !== 'string') ? '[' + k + ']' : '.' + k), state);
 				}
 			});
 		}
@@ -285,7 +285,7 @@ var Mangler = (function(global) {
 	}
 
 	ManglerObject.prototype.add = function(item) {
-		if(typeof item != 'undefined') {
+		if(typeof item !== 'undefined') {
 			if(fn.isArray(item)) {
 				this.items = this.items.concat(item);
 			} else {
@@ -318,7 +318,7 @@ var Mangler = (function(global) {
 		if(fn.isArray(filter)) {
 			filter = filterToRegExp(filter.join('|'))
 		} else if(!(filter instanceof RegExp)) {
-			if(typeof filter == 'string') {
+			if(typeof filter === 'string') {
 				filter = filterToRegExp(filter);
 			} else {
 				return this;
@@ -339,7 +339,7 @@ var Mangler = (function(global) {
 		fn.explore(items, function(k, v, path, state) {
 			var item, i, m;
 
-			path = path + (typeof k != 'string' ? '[' + k + ']' : '.' + k);
+			path = path + (typeof k !== 'string' ? '[' + k + ']' : '.' + k);
 			if(filter.test(path)) {
 				// Add keys and props to objects
 				if(op.key !== false || op.prop !== false) {
@@ -351,7 +351,7 @@ var Mangler = (function(global) {
 									if(op.key !== false) item[op.key] = i;
 									if(op.prop !== false) {
 										m = path.match(/\.([^\.\[]*)[0-9\[\]]*$/);
-										if(m != null) item[op.prop] = m[1];
+										if(m !== null) item[op.prop] = m[1];
 									}
 								}
 							}
@@ -360,7 +360,7 @@ var Mangler = (function(global) {
 						if(op.key !== false) v[op.key] = k;
 						if(op.prop !== false) {
 							m = path.match(/\.([^\.\[]*)[0-9\[\]]*$/);
-							if(m != null) v[op.prop] = m[1];
+							if(m !== null) v[op.prop] = m[1];
 						}
 					}
 				}
@@ -417,7 +417,7 @@ var Mangler = (function(global) {
 
 					// Merge new flattened items back into object
 					fn.merge(obj, o);
-				} while(more && (op.limit == 0 || --limit > 0))
+				} while(more && (op.limit === 0 || --limit > 0))
 
 				// Don't go any deeper into the object
 				return false;
@@ -443,7 +443,7 @@ var Mangler = (function(global) {
 	}
 
 	ManglerObject.prototype.push = function(item) {
-		if(typeof item != 'undefined') {
+		if(typeof item !== 'undefined') {
 			this.items.push(item);
 		}
 		return this;
