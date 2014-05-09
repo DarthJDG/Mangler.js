@@ -32,7 +32,7 @@
 	Mangler.each(typedArrays, function(i, type) {
 		var func = global[type];
 		if(func) {
-			Mangler.registerType(type, { $constructor: func, clone: 'constructor', each: 'array' });
+			Mangler.registerType(type, { $constructor: func, clone: 'constructor', each: 'array', get: 'array' });
 		}
 	});
 
