@@ -152,9 +152,7 @@ var Mangler = (function(global) {
 
 		ManglerObject: {
 			clone: true,
-			each: function(obj, callback) {
-				fn.each(obj.items, callback);
-			},
+			each: true,
 			get: true
 		},
 
