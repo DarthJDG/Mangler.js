@@ -325,6 +325,35 @@ var Mangler = (function(global) {
 		if(g) return g(obj, i);
 	}
 
+	fn.getPath = function(obj, path) {
+		// Path has to be string
+		if(typeof path !== 'string') return;
+
+		var k;
+		while(path.length !== 0 && typeof obj !== 'undefined') {
+			// Trim starting dot if any
+			if(path[0] === '.') {
+				path = path.slice(1);
+			}
+
+			if(path[0] === '[') {
+				// Path starts with an array index
+				k = path.match(/^\[([^\]]*)\]/)[1];
+				path = path.slice(k.length + 2);
+				k = parseInt(k, 10);
+				if(isNaN(k)) return;
+			} else {
+				// Must be a property name
+				k = path.match(/^([^\.\[]*)/)[0];
+				path = path.slice(k.length);
+				if(!k.length) return;
+			}
+			obj = fn.get(obj, k);
+		}
+
+		return obj;
+	}
+
 	fn.merge = function(dst, src) {
 		if(!fn.isObject(dst) || !fn.isObject(src)) return dst;
 		for(var k in src) dst[k] = src[k];
