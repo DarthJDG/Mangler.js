@@ -262,51 +262,49 @@ var Mangler = (function(global) {
 			n++;
 			switch(k) {
 				case '$gt':
-					res = res && obj > v;
+					res = obj > v;
 					break;
 
 				case '$gte':
-					res = res && obj >= v;
+					res = obj >= v;
 					break;
 
 				case '$lt':
-					res = res && obj < v;
+					res = obj < v;
 					break;
 
 				case '$lte':
-					res = res && obj <= v;
+					res = obj <= v;
 					break;
 
 				case '$ne':
-					res = res && obj !== v;
+					res = obj !== v;
 					break;
 
 				case '$or':
-					temp = false;
+					res = false;
 					fn.each(v, function(or_k, or_v) {
-						temp = fn.test(obj, or_v);
-						if(temp) return false;
+						res = fn.test(obj, or_v);
+						if(res) return false;
 					});
-					res = res && temp;
 					break;
 
 				case '$all':
 					if(fn.isArray(obj)) {
-						temp = true;
+						res = true;
 						fn.each(v, function(arr_k, arr_v) {
 							if(obj.indexOf(arr_v) === -1) {
-								temp = false;
+								res = false;
 								return false;
 							}
 						});
-						res = res && temp;
 					} else {
 						res = false;
 					}
 					break;
 
 				case '$size':
-					res = res && (fn.isArray(obj) ? obj.length === v : false);
+					res = fn.isArray(obj) ? obj.length === v : false;
 					break;
 
 				case '$elemMatch':
@@ -323,51 +321,50 @@ var Mangler = (function(global) {
 
 				case '$in':
 					if(fn.isArray(obj)) {
-						temp = false;
+						res = false;
 						fn.each(v, function(arr_k, arr_v) {
 							if(obj.indexOf(arr_v) !== -1) {
-								temp = true;
+								res = true;
 								return false;
 							}
 						});
-						res = res && temp;
 					} else {
-						res = res && v.indexOf(obj) !== -1;
+						res = v.indexOf(obj) !== -1;
 					}
 					break;
 
 				case '$nin':
-					res = res && !fn.test(obj, { $in: v });
+					res = !fn.test(obj, { $in: v });
 					break;
 
 				case '$not':
-					res = res && !fn.test(obj, v);
+					res = !fn.test(obj, v);
 					break;
 
 				case '$nor':
-					res = res && !fn.test(obj, { $or: v });
+					res = !fn.test(obj, { $or: v });
 					break;
 
 				case '$exists':
-					res = res && (typeof obj !== 'undefined') === !!v;
+					res = (typeof obj !== 'undefined') === !!v;
 					break;
 
 				case '$type':
 					temp = fn.getType(obj);
 					if(v !== '$value' && temp === '$value') temp = typeof obj;
-					res = res && temp === v;
+					res = temp === v;
 					break;
 
 				case '$mod':
-					res = res && obj % v[0] === v[1];
+					res = (obj % v[0] === v[1]);
 					break;
 
 				case '$where':
-					res = (typeof v === 'function') ? res && v(obj) : false;
+					res = (typeof v === 'function') ? v(obj) : false;
 					break;
 
 				default:
-					res = res && fn.test(fn.getPath(obj, k), v);
+					res = fn.test(fn.getPath(obj, k), v);
 			}
 			if(!res) return false;
 		});
