@@ -256,10 +256,9 @@ var Mangler = (function(global) {
 	}
 
 	fn.test = function(obj, cond) {
-		var temp, res = true, n = 0;
+		var temp, res = true;
 
-		fn.each(cond, function(k, v) {
-			n++;
+		var processConditions = function(k, v) {
 			switch(k) {
 				case '$gt':
 					res = obj > v;
@@ -367,11 +366,13 @@ var Mangler = (function(global) {
 					res = fn.test(fn.getPath(obj, k), v);
 			}
 			if(!res) return false;
-		});
+		};
 
-		if(n == 0 && !fn.isObject(cond)) {
-			// Condition must be a single value, check equality
-			res = (fn.getType(cond) === 'RegExp') ? cond.test(obj) : (obj === cond);
+		switch(fn.getType(cond)) {
+			case 'Object':    fn.each(cond, processConditions);      break;
+			case 'Array':     res = fn.test(obj, { $all: cond });    break;
+			case 'RegExp':    res = cond.test(obj);                  break;
+			default:          res = obj === cond;
 		}
 
 		return res;
