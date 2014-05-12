@@ -539,15 +539,31 @@ var Mangler = (function(global) {
 	}
 
 	ManglerObject.prototype.get = function(i) {
-		return fn.get(this.items, i);
+		if(fn.isObject(i)) {
+			// Treat parameter as a query and return the first match
+			var ret;
+			fn.each(this.items, function(k, v) {
+				if(fn.test(v, i)) {
+					ret = v;
+					return false;
+				}
+			});
+			return ret;
+		} else {
+			return fn.get(this.items, i);
+		}
 	}
 
-	ManglerObject.prototype.filter = function(cond) {
+	ManglerObject.prototype.find = function(cond) {
 		var arr = [];
 		fn.each(this.items, function(k, v) {
 			if(fn.test(v, cond)) arr.push(v);
 		});
-		this.items = arr;
+		return arr;
+	}
+
+	ManglerObject.prototype.filter = function(cond) {
+		this.items = this.find(cond);
 		return this;
 	}
 
