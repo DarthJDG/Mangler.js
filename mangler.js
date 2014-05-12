@@ -255,6 +255,89 @@ var Mangler = (function(global) {
 		return c ? c(obj) : obj;
 	}
 
+	fn.test = function(obj, cond) {
+		var temp, res = true, n = 0;
+
+		fn.each(cond, function(k, v) {
+			n++;
+			switch(k) {
+				case '$gt':
+					res = res && obj > v;
+					break;
+
+				case '$gte':
+					res = res && obj >= v;
+					break;
+
+				case '$lt':
+					res = res && obj < v;
+					break;
+
+				case '$lte':
+					res = res && obj <= v;
+					break;
+
+				case '$ne':
+					res = res && obj !== v;
+					break;
+
+				case '$or':
+					temp = false;
+					fn.each(v, function(or_k, or_v) {
+						temp = fn.test(obj, or_v);
+						if(temp) return false;
+					});
+					res = res && temp;
+					break;
+
+				case '$in':
+					res = res && v.indexOf(obj) !== -1;
+					break;
+
+				case '$nin':
+					res = res && v.indexOf(obj) === -1;
+					break;
+
+				case '$not':
+					res = res && !fn.test(obj, v);
+					break;
+
+				case '$nor':
+					res = res && !fn.test(obj, { $or: v });
+					break;
+
+				case '$exists':
+					res = res && (typeof obj !== 'undefined') === !!v;
+					break;
+
+				case '$type':
+					temp = fn.getType(obj);
+					if(v !== '$value' && temp === '$value') temp = typeof obj;
+					res = res && temp === v;
+					break;
+
+				case '$mod':
+					res = res && obj % v[0] === v[1];
+					break;
+
+				case '$where':
+					res = (typeof v === 'function') ? res && v(obj) : false;
+					break;
+
+				default:
+					res = res && fn.test(fn.getPath(obj, k), v);
+			}
+			if(!res) return false;
+		});
+
+		if(n == 0 && !fn.isObject(cond)) {
+			// Condition must be a single value, check equality
+			res = (fn.getType(cond) === 'RegExp') ? cond.test(obj) : (obj === cond);
+		}
+
+		return res;
+	}
+
 	fn.toCase = function(str, type) {
 		var i, word;
 
@@ -457,6 +540,15 @@ var Mangler = (function(global) {
 
 	ManglerObject.prototype.get = function(i) {
 		return fn.get(this.items, i);
+	}
+
+	ManglerObject.prototype.filter = function(cond) {
+		var arr = [];
+		fn.each(this.items, function(k, v) {
+			if(fn.test(v, cond)) arr.push(v);
+		});
+		this.items = arr;
+		return this;
 	}
 
 	ManglerObject.prototype.flatten = function(options) {
