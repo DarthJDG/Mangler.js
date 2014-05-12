@@ -664,7 +664,7 @@ var Mangler = (function(global) {
 				ret = generator(i, v);
 				if(ret !== false) index[ret] = v;
 			} else {
-				index[v[generator]] = v;
+				index[fn.getPath(v, generator)] = v;
 			}
 		});
 		return index;
