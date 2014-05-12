@@ -290,12 +290,54 @@ var Mangler = (function(global) {
 					res = res && temp;
 					break;
 
+				case '$all':
+					if(fn.isArray(obj)) {
+						temp = true;
+						fn.each(v, function(arr_k, arr_v) {
+							if(obj.indexOf(arr_v) === -1) {
+								temp = false;
+								return false;
+							}
+						});
+						res = res && temp;
+					} else {
+						res = false;
+					}
+					break;
+
+				case '$size':
+					res = res && (fn.isArray(obj) ? obj.length === v : false);
+					break;
+
+				case '$elemMatch':
+					res = false;
+					if(fn.isArray(obj)) {
+						fn.each(obj, function(arr_k, arr_v) {
+							if(fn.test(arr_v, v)) {
+								res = true;
+								return false;
+							}
+						});
+					}
+					break;
+
 				case '$in':
-					res = res && v.indexOf(obj) !== -1;
+					if(fn.isArray(obj)) {
+						temp = false;
+						fn.each(v, function(arr_k, arr_v) {
+							if(obj.indexOf(arr_v) !== -1) {
+								temp = true;
+								return false;
+							}
+						});
+						res = res && temp;
+					} else {
+						res = res && v.indexOf(obj) !== -1;
+					}
 					break;
 
 				case '$nin':
-					res = res && v.indexOf(obj) === -1;
+					res = res && !fn.test(obj, { $in: v });
 					break;
 
 				case '$not':
