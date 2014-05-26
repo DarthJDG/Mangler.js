@@ -443,6 +443,73 @@ var Mangler = (function(global) {
 		}
 	}
 
+	fn.extract = function(obj, filter, options) {
+		var op, ret = [];
+
+		// Process filters
+		if(fn.isArray(filter)) {
+			filter = filterToRegExp(filter.join('|'))
+		} else if(!(filter instanceof RegExp)) {
+			if(typeof filter === 'string') {
+				filter = filterToRegExp(filter);
+			} else {
+				return this;
+			}
+		}
+
+		// Apply default options
+		op = fn.merge({
+			method: 'add',
+			key: false,
+			prop: false,
+			drilldown: false
+		}, options);
+		op.key = op.key === true ? 'key' : op.key;
+		op.prop = op.prop === true ? 'prop' : op.prop;
+
+		fn.explore(obj, function(k, v, path, state) {
+			var item, i, m;
+
+			path = path + (typeof k !== 'string' ? '[' + k + ']' : '.' + k);
+			if(filter.test(path)) {
+				// Add keys and props to objects
+				if(op.key !== false || op.prop !== false) {
+					if(fn.isArray(v)) {
+						if(op.method === 'add') {
+							for(i = 0; i < v.length; i++) {
+								item = v[i];
+								if(fn.isObject(item)) {
+									if(op.key !== false) item[op.key] = i;
+									if(op.prop !== false) {
+										m = path.match(/\.([^\.\[]*)[0-9\[\]]*$/);
+										if(m !== null) item[op.prop] = m[1];
+									}
+								}
+							}
+						}
+					} else if(fn.isObject(v)) {
+						if(op.key !== false) v[op.key] = k;
+						if(op.prop !== false) {
+							m = path.match(/\.([^\.\[]*)[0-9\[\]]*$/);
+							if(m !== null) v[op.prop] = m[1];
+						}
+					}
+				}
+
+				// Add to items with the preferred method
+				if(op.method === 'add' && fn.isArray(v)) {
+					ret = ret.concat(v);
+				} else {
+					ret.push(v);
+				}
+
+				// Drill down into a matched object?
+				if(!op.drilldown) return false;
+			}
+		}, '', {});
+		return ret;
+	}
+
 	fn.get = function(obj, i) {
 		var g = fn.getGetter(obj);
 		if(g) return g(obj, i);
@@ -509,72 +576,7 @@ var Mangler = (function(global) {
 	}
 
 	ManglerObject.prototype.extract = function(filter, options) {
-		var mangler = this,
-			items = this.items,
-			op;
-
-		// Process filters
-		if(fn.isArray(filter)) {
-			filter = filterToRegExp(filter.join('|'))
-		} else if(!(filter instanceof RegExp)) {
-			if(typeof filter === 'string') {
-				filter = filterToRegExp(filter);
-			} else {
-				return this;
-			}
-		}
-
-		// Apply default options
-		op = fn.merge({
-			method: 'add',
-			key: false,
-			prop: false,
-			drilldown: false
-		}, options);
-		op.key = op.key === true ? 'key' : op.key;
-		op.prop = op.prop === true ? 'prop' : op.prop;
-
-		this.items = [];
-		fn.explore(items, function(k, v, path, state) {
-			var item, i, m;
-
-			path = path + (typeof k !== 'string' ? '[' + k + ']' : '.' + k);
-			if(filter.test(path)) {
-				// Add keys and props to objects
-				if(op.key !== false || op.prop !== false) {
-					if(fn.isArray(v)) {
-						if(op.method === 'add') {
-							for(i = 0; i < v.length; i++) {
-								item = v[i];
-								if(fn.isObject(item)) {
-									if(op.key !== false) item[op.key] = i;
-									if(op.prop !== false) {
-										m = path.match(/\.([^\.\[]*)[0-9\[\]]*$/);
-										if(m !== null) item[op.prop] = m[1];
-									}
-								}
-							}
-						}
-					} else if(fn.isObject(v)) {
-						if(op.key !== false) v[op.key] = k;
-						if(op.prop !== false) {
-							m = path.match(/\.([^\.\[]*)[0-9\[\]]*$/);
-							if(m !== null) v[op.prop] = m[1];
-						}
-					}
-				}
-
-				// Add to items with the preferred method
-				if(op.method === 'add') {
-					mangler.add(v);
-				} else {
-					mangler.push(v);
-				}
-
-				// Drill down into a matched object?
-				if(!op.drilldown) return false;
-			}
-		}, '', {});
+		this.items = fn.extract(this.items, filter, options);
 		return this;
 	}
 
