@@ -510,6 +510,45 @@ var Mangler = (function(global) {
 		return ret;
 	}
 
+	fn.flatten = function(obj, options) {
+		var more, limit, o;
+
+		// Apply default options
+		var op = fn.merge({
+			limit: 0,
+			toCase: '_'
+		}, options);
+
+		if(fn.isObject(obj)) {
+			more = false;
+			limit = op.limit;
+
+			do {
+				// Create a new object to store the flattened items
+				o = {};
+
+				// Iterate through all properties
+				more = false;
+				fn.each(obj, function(prop, val) {
+					if(fn.isArray(val) || fn.isObject(val)) {
+						fn.each(val, function(k, v) {
+							if(op.toCase === '_') {
+								o[prop + '_' + k] = v;
+							} else {
+								o[fn.toCase(prop + '_' + k, op.toCase)] = v;
+							}
+							if(fn.isArray(v) || fn.isObject(v)) more = true;
+						});
+						delete obj[prop];
+					}
+				});
+
+				// Merge new flattened items back into object
+				fn.merge(obj, o);
+			} while(more && (op.limit === 0 || --limit > 0))
+		}
+	}
+
 	fn.get = function(obj, i) {
 		var g = fn.getGetter(obj);
 		if(g) return g(obj, i);
@@ -610,48 +649,8 @@ var Mangler = (function(global) {
 	}
 
 	ManglerObject.prototype.flatten = function(options) {
-		// Apply default options
-		var op = fn.merge({
-			limit: 0,
-			toCase: '_'
-		}, options);
-
-		// Iterate through all top-level objects
-		fn.explore(this.items, function(key, obj) {
-			var more, limit, o;
-
-			if(fn.isObject(obj)) {
-				// This object needs to be flattened
-				more = false;
-				limit = op.limit;
-
-				do {
-					// Create a new object to store the flattened items
-					o = {};
-
-					// Iterate through all properties
-					more = false;
-					fn.each(obj, function(prop, val) {
-						if(fn.isArray(val) || fn.isObject(val)) {
-							fn.each(val, function(k, v) {
-								if(op.toCase === '_') {
-									o[prop + '_' + k] = v;
-								} else {
-									o[fn.toCase(prop + '_' + k, op.toCase)] = v;
-								}
-								if(fn.isArray(v) || fn.isObject(v)) more = true;
-							});
-							delete obj[prop];
-						}
-					});
-
-					// Merge new flattened items back into object
-					fn.merge(obj, o);
-				} while(more && (op.limit === 0 || --limit > 0))
-
-				// Don't go any deeper into the object
-				return false;
-			}
+		fn.each(this.items, function(key, obj) {
+			fn.flatten(obj, options);
 		});
 		return this;
 	}
