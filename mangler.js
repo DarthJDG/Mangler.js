@@ -584,8 +584,33 @@ var Mangler = (function(global) {
 	}
 
 	fn.merge = function(dst, src) {
-		if(!fn.isObject(dst) || !fn.isObject(src)) return dst;
-		for(var k in src) dst[k] = src[k];
+		var dstType = fn.getType(dst);
+		var srcType = fn.getType(src);
+
+		if(srcType === 'Object') {
+			if(dstType === 'Object') {
+				// Merge two objects
+				for(var k in src) dst[k] = src[k];
+			} else if(dstType === 'Array') {
+				// Merge one object into an array of objects
+				fn.each(dst, function(key, obj) {
+					if(fn.isObject(obj)) fn.merge(obj, src);
+				});
+			}
+		} else if(srcType === 'Array') {
+			if(dstType === 'Object') {
+				// Merge an array of objects into a single object
+				fn.each(src, function(key, obj) {
+					if(fn.isObject(obj)) fn.merge(dst, obj);
+				});
+			} else if(dstType === 'Array') {
+				// Merge two arrays of objects
+				for(var i = 0; i < src.length && i < dst.length; i++) {
+					if(fn.isObject(src[i]) && fn.isObject(dst[i])) fn.merge(dst[i], src[i]);
+				}
+			}
+		}
+
 		return dst;
 	}
 
