@@ -182,7 +182,7 @@ var Mangler = (function(global) {
 		} else if(typeof obj === 'object') {
 			name = Object.prototype.toString.call(obj).match(/^\[object (.*)\]$/)[1];
 			if(name === 'Object') {
-				name = obj.constructor.toString().match(/^function (.*)\(/)[1];
+				name = obj.constructor.toString().match(/^function ([^\(]*)\(/)[1];
 				if(!name) name = '$unknown';
 			}
 		} else if(typeof obj === 'function') {
