@@ -162,14 +162,42 @@ var Mangler = (function(global) {
 		}
 	};
 
-	fn.mergeType = function(typestring, obj) {
-		var handler = types[typestring];
-		if(!handler) handler = types[typestring] = {};
+	var functionCache = [];
+
+	// Return type name from string, instance or constructor
+	function resolveType(type) {
+		var typename = '';
+
+		if(typeof type === 'string') {
+			return type;
+		} else if(typeof type === 'object') {
+			typename = fn.getType(type);
+			if(typename === '$unknown') {
+				// Unknown type, push constructor to cache
+				typename = '$registered:' + functionCache.length;
+				functionCache.push(type.constructor);
+			}
+		} else if(typeof type === 'function') {
+			typename = type.name;
+			if(typename === '') {
+				// Unnamed function, push to cache
+				typename = '$registered:' + functionCache.length;
+				functionCache.push(type);
+			}
+		}
+		return typename;
+	}
+
+	fn.mergeType = function(type, obj) {
+		type = resolveType(type);
+		var handler = types[type];
+		if(!handler) handler = types[type] = {};
 		fn.merge(handler, obj);
 	}
 
-	fn.registerType = function(typestring, obj) {
-		types[typestring] = obj;
+	fn.registerType = function(type, obj) {
+		type = resolveType(type);
+		types[type] = obj;
 	}
 
 	fn.getType = function(obj) {
@@ -183,7 +211,13 @@ var Mangler = (function(global) {
 			name = Object.prototype.toString.call(obj).match(/^\[object (.*)\]$/)[1];
 			if(name === 'Object') {
 				name = obj.constructor.toString().match(/^function ([^\(]*)\(/)[1];
-				if(!name) name = '$unknown';
+				if(!name) {
+					if((name = functionCache.indexOf(obj.constructor)) !== -1) {
+						name = '$registered:' + name;
+					} else {
+						name = '$unknown';
+					}
+				}
 			}
 		} else if(typeof obj === 'function') {
 			name = 'function';
