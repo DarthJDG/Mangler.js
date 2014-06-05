@@ -226,6 +226,19 @@ var Mangler = (function(global) {
 		return name;
 	}
 
+	fn.compareType = function(a, b) {
+		if(a === b) return true;
+		if(a === null || b === null) return false;
+		if(b === global.Function && typeof a === 'function') return true;
+		if(a === global.Function && typeof b === 'function') return true;
+
+		if(typeof a === 'object') a = a.constructor;
+		if(typeof b === 'object') b = b.constructor;
+		if(typeof a === 'function' && typeof b === 'function') return a === b;
+
+		return typeof a === typeof b;
+	}
+
 	fn.getIterator = function(type) {
 		if(typeof type !== 'string') type = fn.getType(type);
 
@@ -388,9 +401,7 @@ var Mangler = (function(global) {
 					break;
 
 				case '$type':
-					temp = fn.getType(obj);
-					if(v !== '$value' && temp === '$value') temp = typeof obj;
-					res = temp === v;
+					res = fn.compareType(obj, v);
 					break;
 
 				case '$mod':
