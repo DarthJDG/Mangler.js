@@ -281,8 +281,15 @@ var Mangler = (function(global) {
 		return null;
 	}
 
-	fn.isArray = function(obj) { return fn.getType(obj) === 'Array'; }
-	fn.isObject = function(obj) { return fn.getType(obj) === 'Object'; }
+	fn.isArray = function(obj) {
+		if(obj === null || typeof obj !== 'object') return false;
+		return obj.constructor === global.Array;
+	}
+
+	fn.isObject = function(obj) {
+		if(obj === null || typeof obj !== 'object') return false;
+		return obj.constructor === global.Object;
+	}
 
 	fn.clone = function(obj) {
 		var c = fn.getCloner(obj);
@@ -402,11 +409,16 @@ var Mangler = (function(global) {
 			if(!res) return false;
 		};
 
-		switch(fn.getType(cond)) {
-			case 'Object':    fn.each(cond, processConditions);      break;
-			case 'Array':     res = fn.test(obj, { $all: cond });    break;
-			case 'RegExp':    res = cond.test(obj);                  break;
-			default:          res = obj === cond;
+		if(cond === null || typeof cond !== 'object') {
+			res = obj === cond;
+		} else if(cond.constructor === global.Object) {
+			fn.each(cond, processConditions);
+		} else if(cond.constructor === global.Array) {
+			res = fn.test(obj, { $all: cond });
+		} else if(cond.constructor === global.RegExp) {
+			res = cond.test(obj);
+		} else {
+			res = obj === cond;
 		}
 
 		return res;
@@ -618,26 +630,28 @@ var Mangler = (function(global) {
 	}
 
 	fn.merge = function(dst, src) {
-		var dstType = fn.getType(dst);
-		var srcType = fn.getType(src);
+		if(dst === null || src === null || typeof dst !== 'object' || typeof src !== 'object') return dst;
 
-		if(srcType === 'Object') {
-			if(dstType === 'Object') {
+		var dstFunc = dst.constructor;
+		var srcFunc = src.constructor;
+
+		if(srcFunc === global.Object) {
+			if(dstFunc === global.Object) {
 				// Merge two objects
 				for(var k in src) dst[k] = src[k];
-			} else if(dstType === 'Array') {
+			} else if(dstFunc === global.Array) {
 				// Merge one object into an array of objects
 				fn.each(dst, function(key, obj) {
 					if(fn.isObject(obj)) fn.merge(obj, src);
 				});
 			}
-		} else if(srcType === 'Array') {
-			if(dstType === 'Object') {
+		} else if(srcFunc === global.Array) {
+			if(dstFunc === global.Object) {
 				// Merge an array of objects into a single object
 				fn.each(src, function(key, obj) {
 					if(fn.isObject(obj)) fn.merge(dst, obj);
 				});
-			} else if(dstType === 'Array') {
+			} else if(dstFunc === global.Array) {
 				// Merge two arrays of objects
 				for(var i = 0; i < src.length && i < dst.length; i++) {
 					if(fn.isObject(src[i]) && fn.isObject(dst[i])) fn.merge(dst[i], src[i]);
