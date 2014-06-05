@@ -64,7 +64,7 @@ var Mangler = (function(global) {
 	}
 
 	// Re-usable handler functions
-	var handlers = {
+	var genericHandlers = {
 		standardClone: function(obj) {
 			return obj.clone();
 		},
@@ -112,118 +112,39 @@ var Mangler = (function(global) {
 		}
 	};
 
-	// Built-in type handlers
-	var types = {
-		Object: {
-			clone: function(obj) {
-				var k, res = {};
-				for(k in obj) {
-					res[k] = fn.clone(obj[k]);
-				}
-				return res;
-			},
+	var handlers = [];
+	var constructors = [];
 
-			each: function(obj, callback) {
-				for(var k in obj) {
-					if(callback(k, obj[k]) === false) return;
-				}
-			},
+	// Return type index in list from instance or constructor
+	// Returns -1 if not found or parameter is not an object/function
+	function resolveType(obj, register) {
+		if(obj === null) return -1;
+		if(typeof obj === 'object') obj = obj.constructor;
+		if(typeof obj !== 'function') return -1;
 
-			get: handlers.arrayLikeGet
-		},
-
-		Array: {
-			clone: function(obj) {
-				var i, item, res = [];
-				for(i = 0; i < obj.length; i++) {
-					item = obj[i];
-					// Filter out undefined for sparse arrays
-					if(typeof item !== 'undefined') {
-						res[i] = fn.clone(item);
-					}
-				}
-				return res;
-			},
-
-			each: handlers.arrayLikeEach,
-			get: handlers.arrayLikeGet
-		},
-
-		ManglerObject: {
-			clone: true,
-			each: true,
-			get: true
-		},
-
-		Date: {
-			clone: 'constructor'
-		}
-	};
-
-	var functionCache = [];
-
-	// Return type name from string, instance or constructor
-	function resolveType(type) {
-		var typename = '';
-
-		if(typeof type === 'string') {
-			return type;
-		} else if(typeof type === 'object') {
-			typename = fn.getType(type);
-			if(typename === '$unknown') {
-				// Unknown type, push constructor to cache
-				typename = '$registered:' + functionCache.length;
-				functionCache.push(type.constructor);
-			}
-		} else if(typeof type === 'function') {
-			typename = type.name;
-			if(typename === '') {
-				// Unnamed function, push to cache
-				typename = '$registered:' + functionCache.length;
-				functionCache.push(type);
-			}
-		}
-		return typename;
-	}
-
-	fn.mergeType = function(type, obj) {
-		type = resolveType(type);
-		var handler = types[type];
-		if(!handler) handler = types[type] = {};
-		fn.merge(handler, obj);
-	}
-
-	fn.registerType = function(type, obj) {
-		type = resolveType(type);
-		types[type] = obj;
-	}
-
-	fn.getType = function(obj) {
-		var name;
-
-		if(typeof obj === 'undefined') {
-			name = 'undefined';
-		} else if(obj === null) {
-			name = 'null';
-		} else if(typeof obj === 'object') {
-			name = Object.prototype.toString.call(obj).match(/^\[object (.*)\]$/)[1];
-			if(name === 'Object') {
-				name = obj.constructor.toString().match(/^function ([^\(]*)\(/)[1];
-				if(!name) {
-					if((name = functionCache.indexOf(obj.constructor)) !== -1) {
-						name = '$registered:' + name;
-					} else {
-						name = '$unknown';
-					}
-				}
-			}
-		} else if(typeof obj === 'function') {
-			name = 'function';
-		} else {
-			name = '$value';
+		var index = constructors.indexOf(obj);
+		if(index === -1 && register) {
+			// Register unknown constructor
+			index = constructors.length;
+			constructors[index] = obj;
+			handlers[index] = {};
 		}
 
-		return name;
+		return index;
+	}
+
+	fn.mergeType = function(obj, handler) {
+		var index = resolveType(obj, true);
+		if(index !== -1) {
+			fn.merge(handlers[index], handler);
+		}
+	}
+
+	fn.registerType = function(obj, handler) {
+		var index = resolveType(obj, true);
+		if(index !== -1) {
+			handlers[index] = handler;
+		}
 	}
 
 	fn.compareType = function(a, b) {
@@ -239,54 +160,51 @@ var Mangler = (function(global) {
 		return typeof a === typeof b;
 	}
 
-	fn.getIterator = function(type) {
-		if(typeof type !== 'string') type = fn.getType(type);
+	fn.getIterator = function(obj) {
+		var index, h;
+		if((index = resolveType(obj)) === -1) return null;
+		h = handlers[index];
 
-		var t = types[type];
-		if(!t) return null;
-
-		if(typeof t.each === 'function') {
-			return t.each;
-		} else if(t.each === true) {
-			return handlers.standardEach;
-		} else if(t.each === 'array') {
-			return handlers.arrayLikeEach;
+		if(typeof h.each === 'function') {
+			return h.each;
+		} else if(h.each === true) {
+			return genericHandlers.standardEach;
+		} else if(h.each === 'array') {
+			return genericHandlers.arrayLikeEach;
 		}
 
 		return null;
 	}
 
-	fn.getCloner = function(type) {
-		if(typeof type !== 'string') type = fn.getType(type);
+	fn.getCloner = function(obj) {
+		var index, h;
+		if((index = resolveType(obj)) === -1) return null;
+		h = handlers[index];
 
-		var t = types[type];
-		if(!t) return null;
-
-		if(typeof t.clone === 'function') {
-			return t.clone;
-		} else if(t.clone === true) {
-			return handlers.standardClone;
-		} else if(t.clone === 'constructor') {
-			return handlers.copyConstructor;
+		if(typeof h.clone === 'function') {
+			return h.clone;
+		} else if(h.clone === true) {
+			return genericHandlers.standardClone;
+		} else if(h.clone === 'constructor') {
+			return genericHandlers.copyConstructor;
 		}
 
 		return null;
 	}
 
-	fn.getGetter = function(type) {
-		if(typeof type !== 'string') type = fn.getType(type);
+	fn.getGetter = function(obj) {
+		var index, h;
+		if((index = resolveType(obj)) === -1) return null;
+		h = handlers[index];
 
-		var t = types[type];
-		if(!t) return null;
-
-		if(typeof t.get === 'function') {
-			return t.get;
-		} else if(t.get === true) {
-			return handlers.standardGet;
-		} else if(t.get === 'array') {
-			return handlers.arrayLikeGet;
-		} else if(fn.getIterator(type)) {
-			return handlers.eachGet;
+		if(typeof h.get === 'function') {
+			return h.get;
+		} else if(h.get === true) {
+			return genericHandlers.standardGet;
+		} else if(h.get === 'array') {
+			return genericHandlers.arrayLikeGet;
+		} else if(fn.getIterator(obj)) {
+			return genericHandlers.eachGet;
 		}
 
 		return null;
@@ -764,6 +682,53 @@ var Mangler = (function(global) {
 		var i = this.items.indexOf(item);
 		if(i > -1) this.items.splice(i, 1);
 	}
+
+	// Register natively supported object types
+
+	fn.registerType(global.Object, {
+		clone: function(obj) {
+			var k, res = {};
+			for(k in obj) {
+				res[k] = fn.clone(obj[k]);
+			}
+			return res;
+		},
+
+		each: function(obj, callback) {
+			for(var k in obj) {
+				if(callback(k, obj[k]) === false) return;
+			}
+		},
+
+		get: genericHandlers.arrayLikeGet
+	});
+
+	fn.registerType(global.Array, {
+		clone: function(obj) {
+			var i, item, res = [];
+			for(i = 0; i < obj.length; i++) {
+				item = obj[i];
+				// Filter out undefined for sparse arrays
+				if(typeof item !== 'undefined') {
+					res[i] = fn.clone(item);
+				}
+			}
+			return res;
+		},
+
+		each: genericHandlers.arrayLikeEach,
+		get: genericHandlers.arrayLikeGet
+	});
+
+	fn.registerType(ManglerObject, {
+		clone: true,
+		each: true,
+		get: true
+	});
+
+	fn.registerType(global.Date, {
+			clone: 'constructor'
+	});
 
 	return fn;
 
