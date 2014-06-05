@@ -78,8 +78,7 @@ var Mangler = (function(global) {
 		},
 
 		copyConstructor: function(obj) {
-			var func = types[fn.getType(obj)].$constructor;
-			return new func(obj);
+			return new obj.constructor(obj);
 		},
 
 		arrayLikeEach: function(obj, callback) {
@@ -157,7 +156,6 @@ var Mangler = (function(global) {
 		},
 
 		Date: {
-			$constructor: Date,
 			clone: 'constructor'
 		}
 	};
@@ -255,7 +253,7 @@ var Mangler = (function(global) {
 			return t.clone;
 		} else if(t.clone === true) {
 			return handlers.standardClone;
-		} else if(t.clone === 'constructor' && typeof t.$constructor === 'function') {
+		} else if(t.clone === 'constructor') {
 			return handlers.copyConstructor;
 		}
 
