@@ -32,13 +32,13 @@
 	Mangler.each(typedArrays, function(i, type) {
 		var func = global[type];
 		if(func) {
-			Mangler.registerType(type, { $constructor: func, clone: 'constructor', each: 'array', get: 'array' });
+			Mangler.registerType(type, { clone: 'constructor', each: 'array', get: 'array' });
 		}
 	});
 
 	// Native types with working copy-constructor
-	Mangler.registerType('RegExp', { $constructor: global['RegExp'], clone: 'constructor' });
-	Mangler.registerType('String', { $constructor: global['String'], clone: 'constructor' });
+	Mangler.registerType('RegExp', { clone: 'constructor' });
+	Mangler.registerType('String', { clone: 'constructor' });
 
 	// Native types with custom handlers
 
