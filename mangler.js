@@ -633,11 +633,22 @@ var Mangler = (function(global) {
 
 	ManglerObject.prototype.first = function(cond) {
 		var ret;
-		if(typeof cond === 'undefined') cond = {};
+		if(typeof cond === 'undefined') return this.items[0];
 		fn.each(this.items, function(k, v) {
 			if(fn.test(v, cond)) {
 				ret = v;
 				return false;
+			}
+		});
+		return ret;
+	}
+
+	ManglerObject.prototype.last = function(cond) {
+		var ret;
+		if(typeof cond === 'undefined') return this.items[this.items.length];
+		fn.each(this.items, function(k, v) {
+			if(fn.test(v, cond)) {
+				ret = v;
 			}
 		});
 		return ret;
