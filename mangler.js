@@ -483,6 +483,37 @@ var Mangler = (function(global) {
 		return ret;
 	}
 
+	fn.find = function(obj, cond) {
+		var arr = [];
+		fn.each(obj, function(k, v) {
+			if(fn.test(v, cond)) arr.push(v);
+		});
+		return arr;
+	}
+
+	fn.first = function(obj, cond) {
+		var ret;
+		if(typeof cond === 'undefined') cond = {};
+		fn.each(obj, function(k, v) {
+			if(fn.test(v, cond)) {
+				ret = v;
+				return false;
+			}
+		});
+		return ret;
+	}
+
+	fn.last = function(obj, cond) {
+		var ret;
+		if(typeof cond === 'undefined') cond = {};
+		fn.each(obj, function(k, v) {
+			if(fn.test(v, cond)) {
+				ret = v;
+			}
+		});
+		return ret;
+	}
+
 	fn.flatten = function(obj, options) {
 		var more, limit, o;
 
@@ -624,34 +655,15 @@ var Mangler = (function(global) {
 	}
 
 	ManglerObject.prototype.find = function(cond) {
-		var arr = [];
-		fn.each(this.items, function(k, v) {
-			if(fn.test(v, cond)) arr.push(v);
-		});
-		return arr;
+		return fn.find(this.items, cond);
 	}
 
 	ManglerObject.prototype.first = function(cond) {
-		var ret;
-		if(typeof cond === 'undefined') return this.items[0];
-		fn.each(this.items, function(k, v) {
-			if(fn.test(v, cond)) {
-				ret = v;
-				return false;
-			}
-		});
-		return ret;
+		return fn.first(this.items, cond);
 	}
 
 	ManglerObject.prototype.last = function(cond) {
-		var ret;
-		if(typeof cond === 'undefined') return this.items[this.items.length];
-		fn.each(this.items, function(k, v) {
-			if(fn.test(v, cond)) {
-				ret = v;
-			}
-		});
-		return ret;
+		return fn.last(this.items, cond);
 	}
 
 	ManglerObject.prototype.filter = function(cond) {
