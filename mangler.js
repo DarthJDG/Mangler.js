@@ -246,7 +246,7 @@ var Mangler = (function(global) {
 					break;
 
 				case '$lte':
-				case '<='
+				case '<=':
 					res = obj <= v;
 					break;
 
