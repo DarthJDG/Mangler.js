@@ -336,6 +336,7 @@ var Mangler = (function(global) {
 			if(!res) return false;
 		};
 
+		// Have to let 'function' through the first check to fix RegExp bug in old Androids
 		if(cond === null || (typeof cond !== 'object' && typeof cond !== 'function')) {
 			res = obj === cond;
 		} else if(cond.constructor === global.Object) {
