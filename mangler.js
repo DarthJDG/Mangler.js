@@ -343,6 +343,8 @@ var Mangler = (function(global) {
 			fn.each(cond, processConditions);
 		} else if(cond.constructor === global.Array) {
 			res = fn.test(obj, { $all: cond });
+		} else if(cond.constructor === global.Function) {
+			res = fn.test(obj, { $where: cond });
 		} else if(cond.constructor === global.RegExp) {
 			res = cond.test(obj);
 		} else {
