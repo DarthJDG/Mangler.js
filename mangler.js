@@ -231,23 +231,41 @@ var Mangler = (function(global) {
 		var processConditions = function(k, v) {
 			switch(k) {
 				case '$gt':
+				case '>':
 					res = obj > v;
 					break;
 
 				case '$gte':
+				case '>=':
 					res = obj >= v;
 					break;
 
 				case '$lt':
+				case '<':
 					res = obj < v;
 					break;
 
 				case '$lte':
+				case '<='
 					res = obj <= v;
 					break;
 
 				case '$ne':
+				case '!==':
 					res = obj !== v;
+					break;
+
+				case '$eq':
+				case '===':
+					res = obj === v;
+					break;
+
+				case '==':
+					res = obj == v;
+					break;
+
+				case '!=':
+					res = obj != v;
 					break;
 
 				case '$or':
