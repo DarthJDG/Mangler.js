@@ -336,7 +336,7 @@ var Mangler = (function(global) {
 			if(!res) return false;
 		};
 
-		if(cond === null || typeof cond !== 'object') {
+		if(cond === null || (typeof cond !== 'object' && typeof cond !== 'function')) {
 			res = obj === cond;
 		} else if(cond.constructor === global.Object) {
 			fn.each(cond, processConditions);
