@@ -134,17 +134,57 @@ var Mangler = (function(global) {
 		return index;
 	}
 
+	// Resolve final function references in the passed handler
+	// It is called at the time of registration
+	function resolveHandlers(h) {
+		// Iterator
+		if(typeof h.each !== 'function') {
+			if(h.each === true) {
+				h.each = genericHandlers.standardEach;
+			} else if(h.each === 'array') {
+				h.each = genericHandlers.arrayLikeEach;
+			} else {
+				h.each = null;
+			}
+		}
+
+		// Cloner
+		if(typeof h.clone !== 'function') {
+			if(h.clone === true) {
+				h.clone = genericHandlers.standardClone;
+			} else if(h.clone === 'constructor') {
+				h.clone = genericHandlers.copyConstructor;
+			} else {
+				h.clone = null;
+			}
+		}
+
+		// Getter
+		if(typeof h.get !== 'function') {
+			if(h.get === true) {
+				h.get = genericHandlers.standardGet;
+			} else if(h.get === 'array') {
+				h.get = genericHandlers.arrayLikeGet;
+			} else if(h.each !== null) {
+				// Fall-back getter using the iterator, should be avoided
+				h.get = genericHandlers.eachGet;
+			} else {
+				h.get = null;
+			}
+		}
+	}
+
 	fn.mergeType = function(obj, handler) {
 		var index = resolveType(obj, true);
 		if(index !== -1) {
-			fn.merge(handlers[index], handler);
+			resolveHandlers(fn.merge(handlers[index], handler));
 		}
 	}
 
 	fn.registerType = function(obj, handler) {
 		var index = resolveType(obj, true);
 		if(index !== -1) {
-			handlers[index] = handler;
+			resolveHandlers(handlers[index] = handler);
 		}
 	}
 
@@ -162,53 +202,21 @@ var Mangler = (function(global) {
 	}
 
 	fn.getIterator = function(obj) {
-		var index, h;
-		if((index = resolveType(obj)) === -1) return null;
-		h = handlers[index];
-
-		if(typeof h.each === 'function') {
-			return h.each;
-		} else if(h.each === true) {
-			return genericHandlers.standardEach;
-		} else if(h.each === 'array') {
-			return genericHandlers.arrayLikeEach;
-		}
-
-		return null;
+		var i = resolveType(obj);
+		if(i === -1) return null;
+		return handlers[i].each;
 	}
 
 	fn.getCloner = function(obj) {
-		var index, h;
-		if((index = resolveType(obj)) === -1) return null;
-		h = handlers[index];
-
-		if(typeof h.clone === 'function') {
-			return h.clone;
-		} else if(h.clone === true) {
-			return genericHandlers.standardClone;
-		} else if(h.clone === 'constructor') {
-			return genericHandlers.copyConstructor;
-		}
-
-		return null;
+		var i = resolveType(obj);
+		if(i === -1) return null;
+		return handlers[i].clone;
 	}
 
 	fn.getGetter = function(obj) {
-		var index, h;
-		if((index = resolveType(obj)) === -1) return null;
-		h = handlers[index];
-
-		if(typeof h.get === 'function') {
-			return h.get;
-		} else if(h.get === true) {
-			return genericHandlers.standardGet;
-		} else if(h.get === 'array') {
-			return genericHandlers.arrayLikeGet;
-		} else if(fn.getIterator(obj)) {
-			return genericHandlers.eachGet;
-		}
-
-		return null;
+		var i = resolveType(obj);
+		if(i === -1) return null;
+		return handlers[i].get;
 	}
 
 	fn.isArray = function(obj) {
@@ -753,7 +761,7 @@ var Mangler = (function(global) {
 			}
 		},
 
-		get: genericHandlers.arrayLikeGet
+		get: 'array'
 	});
 
 	fn.registerType(global.Array, {
@@ -769,8 +777,8 @@ var Mangler = (function(global) {
 			return res;
 		},
 
-		each: genericHandlers.arrayLikeEach,
-		get: genericHandlers.arrayLikeGet
+		each: 'array',
+		get: 'array'
 	});
 
 	fn.registerType(ManglerObject, {
@@ -780,7 +788,7 @@ var Mangler = (function(global) {
 	});
 
 	fn.registerType(global.Date, {
-			clone: 'constructor'
+		clone: 'constructor'
 	});
 
 	return fn;
