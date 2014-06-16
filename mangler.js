@@ -114,6 +114,7 @@ var Mangler = (function(global) {
 
 	var handlers = [];
 	var constructors = [];
+	var hasOwnProperty = global.Object.prototype.hasOwnProperty;
 
 	// Return type index in list from instance or constructor
 	// Returns -1 if not found or parameter is not an object/function
@@ -609,31 +610,35 @@ var Mangler = (function(global) {
 	}
 
 	fn.merge = function(dst, src) {
-		if(dst === null || src === null || typeof dst !== 'object' || typeof src !== 'object') return dst;
+		if(dst === null || src === null) return dst;
+		if(typeof dst !== 'object' && typeof dst !== 'function') return dst;
+		if(typeof src !== 'object' && typeof src !== 'function') return dst;
 
 		var dstFunc = dst.constructor;
 		var srcFunc = src.constructor;
 
-		if(srcFunc === global.Object) {
-			if(dstFunc === global.Object) {
-				// Merge two objects
-				for(var k in src) dst[k] = src[k];
-			} else if(dstFunc === global.Array) {
-				// Merge one object into an array of objects
-				fn.each(dst, function(key, obj) {
-					if(fn.isObject(obj)) fn.merge(obj, src);
-				});
-			}
-		} else if(srcFunc === global.Array) {
-			if(dstFunc === global.Object) {
-				// Merge an array of objects into a single object
-				fn.each(src, function(key, obj) {
-					if(fn.isObject(obj)) fn.merge(dst, obj);
-				});
-			} else if(dstFunc === global.Array) {
+		if(srcFunc === global.Array) {
+			if(dstFunc === global.Array) {
 				// Merge two arrays of objects
 				for(var i = 0; i < src.length && i < dst.length; i++) {
-					if(fn.isObject(src[i]) && fn.isObject(dst[i])) fn.merge(dst[i], src[i]);
+					fn.merge(dst[i], src[i]);
+				}
+			} else {
+				// Merge an array of objects into a single object
+				fn.each(src, function(key, obj) {
+					fn.merge(dst, obj);
+				});
+			}
+		} else {
+			if(dstFunc === global.Array) {
+				// Merge one object into an array of objects
+				fn.each(dst, function(key, obj) {
+					fn.merge(obj, src);
+				});
+			} else {
+				// Merge two objects
+				for(var k in src) {
+					if(hasOwnProperty.call(src, k)) dst[k] = src[k];
 				}
 			}
 		}
@@ -733,14 +738,18 @@ var Mangler = (function(global) {
 		clone: function(obj) {
 			var k, res = {};
 			for(k in obj) {
-				res[k] = fn.clone(obj[k]);
+				if(hasOwnProperty.call(obj, k)) {
+					res[k] = fn.clone(obj[k]);
+				}
 			}
 			return res;
 		},
 
 		each: function(obj, callback) {
 			for(var k in obj) {
-				if(callback(k, obj[k]) === false) return;
+				if(hasOwnProperty.call(obj, k)) {
+					if(callback(k, obj[k]) === false) return;
+				}
 			}
 		},
 
