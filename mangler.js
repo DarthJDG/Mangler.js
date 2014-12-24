@@ -680,6 +680,10 @@ var Mangler = (function(global) {
 			return new ManglerObject(fn.clone(this.items));
 		},
 
+		copy: function() {
+			return new ManglerObject(this.items);
+		},
+
 		each: function(callback) {
 			fn.each(this.items, callback);
 			return this;
