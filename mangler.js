@@ -727,15 +727,24 @@ var Mangler = (function(global) {
 			return this;
 		},
 
-		index: function(generator) {
+		index: function(generator, delimiter) {
 			var index = {},
 				func = (typeof generator === 'function'),
 				ret;
 
 			fn.each(this.items, function(i, v) {
+				var key;
 				if(func) {
-					ret = generator(i, v);
-					if(ret !== false) index[ret] = v;
+					key = generator(i, v);
+					if(key !== false) index[key] = v;
+				} else if(fn.isArray(generator)) {
+					if(!delimiter) delimiter = '|';
+					key = '';
+					Mangler.each(generator, function(i, field) {
+						if(i > 0) key += delimiter;
+						key += fn.getPath(v, field);
+					});
+					index[key] = v;
 				} else {
 					index[fn.getPath(v, generator)] = v;
 				}
