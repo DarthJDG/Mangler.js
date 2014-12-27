@@ -401,6 +401,9 @@ var Mangler = (function(global) {
 					}
 					return str.join('');
 
+				case '.':
+					return str.join('.');
+
 				default:
 					// Default to snake_case if no type set
 					return str.join('_');
@@ -564,6 +567,8 @@ var Mangler = (function(global) {
 							fn.each(val, function(k, v) {
 								if(op.toCase === '_') {
 									o[prop + '_' + k] = v;
+								} else if(op.toCase === '.') {
+									o[prop + '.' + k] = v;
 								} else {
 									o[fn.toCase(prop + '_' + k, op.toCase)] = v;
 								}
