@@ -21,6 +21,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 var Mangler = (function(global) {
+	// Array compatibity fix for IE8-
+	if (!Array.prototype.indexOf) {
+		Array.prototype.indexOf = function(searchElement, fromIndex) {
+			if (this == null) throw new TypeError('"this" is null or not defined');
+
+			var O = Object(this);
+			var len = O.length >>> 0;
+			if (len === 0) return -1;
+
+			var n = +fromIndex || 0;
+			if (Math.abs(n) === Infinity) n = 0;
+			if (n >= len) return -1;
+
+			var k = Math.max(n >= 0 ? n : len - Math.abs(n), 0);
+			while (k < len) {
+				if (k in O && O[k] === searchElement) return k;
+				k++;
+			}
+			return -1;
+		};
+	}
+
 	function filterToRegExp(filter) {
 		if(filter === '') {
 			filter = '.*';
