@@ -565,7 +565,7 @@ var Mangler = (function(global) {
 			return ret;
 		},
 
-		flatten: function(obj, options) {
+		deflate: function(obj, options) {
 			var more, limit, o;
 
 			// Apply default options
@@ -579,7 +579,7 @@ var Mangler = (function(global) {
 				limit = op.limit;
 
 				do {
-					// Create a new object to store the flattened items
+					// Create a new object to store the deflated items
 					o = {};
 
 					// Iterate through all properties
@@ -600,7 +600,7 @@ var Mangler = (function(global) {
 						}
 					});
 
-					// Merge new flattened items back into object
+					// Merge new deflated items back into object
 					fn.merge(obj, o);
 				} while(more && (op.limit === 0 || --limit > 0))
 			}
@@ -747,9 +747,9 @@ var Mangler = (function(global) {
 			return this;
 		},
 
-		flatten: function(options) {
+		deflate: function(options) {
 			fn.each(this.items, function(key, obj) {
-				fn.flatten(obj, options);
+				fn.deflate(obj, options);
 			});
 			return this;
 		},
