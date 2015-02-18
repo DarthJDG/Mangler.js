@@ -1,6 +1,6 @@
 /**
  * Mangler.js - JavaScript object processing library
- * Copyright (C) 2014
+ * Copyright (C) 2014-2015
  *
  * Project: [http://codebin.co.uk/projects/mangler-js/]
  * GitHub:  [https://github.com/DarthJDG/Mangler.js]
