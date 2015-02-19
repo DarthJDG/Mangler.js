@@ -399,41 +399,60 @@ var Mangler = (function(global) {
 			return res;
 		},
 
-		transform: function(str, options) {
-			var i, word;
+		transform: function(obj, options) {
+			var i, o, word;
 
-			var op = fn.merge({
-				to: '_',
-				from: 'auto',
-			}, fn.isObject(options) ? options : { to: options });
+			if(fn.isArray(obj)) {
+				// Transform array
+				for(i = 0; i < obj.length; i++) obj[i] = fn.transform(obj[i], options);
+				return obj;
+			} else if(fn.isObject(obj)) {
+				// Transform object
+				o = {};
+				fn.each(obj, function(prop, val) {
+					o[fn.transform(prop, options)] = val;
+					delete obj[prop];
+				});
+				fn.merge(obj, o);
+				return obj;
+			} else if(typeof obj === 'string') {
+				// Transform string
+				var op = fn.merge({
+					to: '_',
+					from: 'auto',
+				}, fn.isObject(options) ? options : { to: options });
 
-			// Break string to words
-			str = fn.tokenize(str, op.from);
+				// Break string to words
+				obj = fn.tokenize(obj, op.from);
 
-			switch(op.to) {
-				case 'upper_':
-					return str.join('_').toUpperCase();
+				switch(op.to) {
+					case 'upper_':
+						return obj.join('_').toUpperCase();
 
-				case 'lower_':
-					return str.join('_').toLowerCase();
+					case 'lower_':
+						return obj.join('_').toLowerCase();
 
-				case 'title':
-				case 'camel':
-					for(i = 0; i < str.length; i++) {
-						word = str[i].toLowerCase();
-						if(word !== '' && op.to === 'title' || i > 0) {
-							word = word[0].toUpperCase() + word.slice(1);
+					case 'title':
+					case 'camel':
+						for(i = 0; i < obj.length; i++) {
+							word = obj[i].toLowerCase();
+							if(word !== '' && op.to === 'title' || i > 0) {
+								word = word[0].toUpperCase() + word.slice(1);
+							}
+							obj[i] = word;
 						}
-						str[i] = word;
-					}
-					return str.join('');
+						return obj.join('');
 
-				case '.':
-					return str.join('.');
+					case '.':
+						return obj.join('.');
 
-				default:
-					// Default to snake_case
-					return str.join('_');
+					default:
+						// Default to snake_case
+						return obj.join('_');
+				}
+			} else {
+				// Return parameter as is
+				return obj;
 			}
 		},
 
