@@ -399,7 +399,7 @@ var Mangler = (function(global) {
 			return res;
 		},
 
-		toCase: function(str, type) {
+		transform: function(str, type) {
 			var i, word;
 
 			// Break string to words
@@ -571,7 +571,7 @@ var Mangler = (function(global) {
 			// Apply default options
 			var op = fn.merge({
 				limit: 0,
-				toCase: '_'
+				transform: '_'
 			}, options);
 
 			if(fn.isObject(obj)) {
@@ -587,12 +587,12 @@ var Mangler = (function(global) {
 					fn.each(obj, function(prop, val) {
 						if(fn.isArray(val) || fn.isObject(val)) {
 							fn.each(val, function(k, v) {
-								if(op.toCase === '_') {
+								if(op.transform === '_') {
 									o[prop + '_' + k] = v;
-								} else if(op.toCase === '.') {
+								} else if(op.transform === '.') {
 									o[prop + '.' + k] = v;
 								} else {
-									o[fn.toCase(prop + '_' + k, op.toCase)] = v;
+									o[fn.transform(prop + '_' + k, op.transform)] = v;
 								}
 								if(fn.isArray(v) || fn.isObject(v)) more = true;
 							});
