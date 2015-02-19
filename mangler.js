@@ -594,6 +594,34 @@ var Mangler = (function(global) {
 			return ret;
 		},
 
+		index: function(obj, generator, delimiter) {
+			if(!fn.isArray(obj)) return null;
+
+			var index = {},
+				isFunction = (typeof generator === 'function'),
+				isArray = fn.isArray(generator),
+				ret;
+
+			fn.each(obj, function(i, v) {
+				var key;
+				if(isFunction) {
+					key = generator(i, v);
+					if(key !== false) index[key] = v;
+				} else if(isArray) {
+					if(!delimiter) delimiter = '|';
+					key = '';
+					Mangler.each(generator, function(i, field) {
+						if(i > 0) key += delimiter;
+						key += fn.getPath(v, field);
+					});
+					index[key] = v;
+				} else {
+					index[fn.getPath(v, generator)] = v;
+				}
+			});
+			return index;
+		},
+
 		last: function(obj, cond) {
 			var ret;
 			if(typeof cond === 'undefined') cond = {};
@@ -791,28 +819,7 @@ var Mangler = (function(global) {
 		},
 
 		index: function(generator, delimiter) {
-			var index = {},
-				func = (typeof generator === 'function'),
-				ret;
-
-			fn.each(this.items, function(i, v) {
-				var key;
-				if(func) {
-					key = generator(i, v);
-					if(key !== false) index[key] = v;
-				} else if(fn.isArray(generator)) {
-					if(!delimiter) delimiter = '|';
-					key = '';
-					Mangler.each(generator, function(i, field) {
-						if(i > 0) key += delimiter;
-						key += fn.getPath(v, field);
-					});
-					index[key] = v;
-				} else {
-					index[fn.getPath(v, generator)] = v;
-				}
-			});
-			return index;
+			return fn.index(this.items, generator, delimiter);
 		},
 
 		last: function(cond) {
