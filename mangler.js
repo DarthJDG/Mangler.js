@@ -751,6 +751,13 @@ var Mangler = (function(global) {
 			return new ManglerObject(this.items);
 		},
 
+		deflate: function(options) {
+			fn.each(this.items, function(key, obj) {
+				fn.deflate(obj, options);
+			});
+			return this;
+		},
+
 		each: function(callback) {
 			fn.each(this.items, callback);
 			return this;
@@ -766,8 +773,9 @@ var Mangler = (function(global) {
 			return this;
 		},
 
-		get: function(i) {
-			return fn.get(this.items, i);
+		filter: function(cond) {
+			this.items = this.find(cond);
+			return this;
 		},
 
 		find: function(cond) {
@@ -778,20 +786,8 @@ var Mangler = (function(global) {
 			return fn.first(this.items, cond);
 		},
 
-		last: function(cond) {
-			return fn.last(this.items, cond);
-		},
-
-		filter: function(cond) {
-			this.items = this.find(cond);
-			return this;
-		},
-
-		deflate: function(options) {
-			fn.each(this.items, function(key, obj) {
-				fn.deflate(obj, options);
-			});
-			return this;
+		get: function(i) {
+			return fn.get(this.items, i);
 		},
 
 		index: function(generator, delimiter) {
@@ -817,6 +813,10 @@ var Mangler = (function(global) {
 				}
 			});
 			return index;
+		},
+
+		last: function(cond) {
+			return fn.last(this.items, cond);
 		},
 
 		push: function(item) {
