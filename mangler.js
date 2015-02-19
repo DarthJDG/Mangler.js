@@ -828,7 +828,11 @@ var Mangler = (function(global) {
 
 		remove: function(item) {
 			var i = this.items.indexOf(item);
-			if(i > -1) this.items.splice(i, 1);
+			if(i > -1) {
+				this.items.splice(i, 1);
+				return true;
+			}
+			return false;
 		},
 
 		transform: function(options) {
