@@ -399,13 +399,18 @@ var Mangler = (function(global) {
 			return res;
 		},
 
-		transform: function(str, type) {
+		transform: function(str, options) {
 			var i, word;
 
-			// Break string to words
-			str = fn.tokenize(str);
+			var op = fn.merge({
+				to: '_',
+				from: 'auto',
+			}, fn.isObject(options) ? options : { to: options });
 
-			switch(type) {
+			// Break string to words
+			str = fn.tokenize(str, op.from);
+
+			switch(op.to) {
 				case 'upper_':
 					return str.join('_').toUpperCase();
 
@@ -416,7 +421,7 @@ var Mangler = (function(global) {
 				case 'camel':
 					for(i = 0; i < str.length; i++) {
 						word = str[i].toLowerCase();
-						if(word !== '' && type === 'title' || i > 0) {
+						if(word !== '' && op.to === 'title' || i > 0) {
 							word = word[0].toUpperCase() + word.slice(1);
 						}
 						str[i] = word;
@@ -427,23 +432,39 @@ var Mangler = (function(global) {
 					return str.join('.');
 
 				default:
-					// Default to snake_case if no type set
+					// Default to snake_case
 					return str.join('_');
 			}
 		},
 
-		tokenize: function(str) {
+		tokenize: function(str, from) {
 			if(fn.isArray(str)) return str;
 
-			if(str.indexOf('_') === -1) {
-				// No underscores in the string, try to be clever
-				str = str.replace(/([a-z][A-Z])([A-Z][a-z])/g, '$1_$2')
-				str = str.replace(/([a-z])([A-Z])/g, '$1_$2');
-				str = str.replace(/([a-zA-Z])([0-9])/g, '$1_$2');
-				str = str.replace(/([0-9])([a-zA-Z])/g, '$1_$2');
+			switch(from) {
+				case 'upper_':
+				case 'lower_':
+				case '_':
+					return str.split('_');
+
+				case '.':
+					return str.split('.');
+
+				case 'title':
+				case 'camel':
+					break;
+
+				default:
+					// Auto
+					if(str.indexOf('_') !== -1) return str.split('_');
+					if(str.indexOf('.') !== -1) return str.split('.');
+					break;
 			}
 
-			// Convert to array
+			// Convert from camel/title case
+			str = str.replace(/([a-z][A-Z])([A-Z][a-z])/g, '$1_$2')
+			str = str.replace(/([a-z])([A-Z])/g, '$1_$2');
+			str = str.replace(/([a-zA-Z])([0-9])/g, '$1_$2');
+			str = str.replace(/([0-9])([a-zA-Z])/g, '$1_$2');
 			return str.split('_');
 		},
 
