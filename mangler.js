@@ -484,6 +484,7 @@ var Mangler = (function(global) {
 			str = str.replace(/([a-z])([A-Z])/g, '$1_$2');
 			str = str.replace(/([a-zA-Z])([0-9])/g, '$1_$2');
 			str = str.replace(/([0-9])([a-zA-Z])/g, '$1_$2');
+			str = str.replace(/([A-Z])([A-Z][a-z])/g, '$1_$2');
 			return str.split('_');
 		},
 
