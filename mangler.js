@@ -403,10 +403,13 @@ var Mangler = (function(global) {
 			var i, o, word;
 
 			if(fn.isArray(obj)) {
+
 				// Transform array
 				for(i = 0; i < obj.length; i++) obj[i] = fn.transform(obj[i], options);
 				return obj;
+
 			} else if(fn.isObject(obj)) {
+
 				// Transform object
 				o = {};
 				fn.each(obj, function(prop, val) {
@@ -415,14 +418,20 @@ var Mangler = (function(global) {
 				});
 				fn.merge(obj, o);
 				return obj;
+
 			} else if(typeof obj === 'string') {
+
 				// Transform string
 				var op = fn.merge({
 					to: '_',
 					from: 'auto',
+					rename: {},
+					ignore: []
 				}, fn.isObject(options) ? options : { to: options });
+				if(!fn.isArray(op.ignore)) op.ignore = [op.ignore];
 
-				// Break string to words
+				if(op.ignore.indexOf(obj) !== -1) return obj;
+				obj = op.rename[obj] || obj;
 				obj = fn.tokenize(obj, op.from);
 
 				switch(op.to) {
@@ -450,6 +459,7 @@ var Mangler = (function(global) {
 						// Default to snake_case
 						return obj.join('_');
 				}
+
 			} else {
 				// Return parameter as is
 				return obj;
