@@ -399,6 +399,39 @@ var Mangler = (function(global) {
 			return res;
 		},
 
+		rename: function(obj, dict) {
+			var i, o;
+
+			if(!fn.isObject(dict)) return;
+
+			if(fn.isArray(obj)) {
+
+				// Rename array
+				for(i = 0; i < obj.length; i++) obj[i] = fn.rename(obj[i], dict);
+				return obj;
+
+			} else if(fn.isObject(obj)) {
+
+				// Rename object
+				o = {};
+				fn.each(obj, function(prop, val) {
+					o[fn.rename(prop, dict)] = val;
+					delete obj[prop];
+				});
+				fn.merge(obj, o);
+				return obj;
+
+			} else if(typeof obj === 'string') {
+
+				// Rename string
+				return dict[obj] || obj;
+
+			} else {
+				// Return parameter as is
+				return obj;
+			}
+		},
+
 		transform: function(obj, options) {
 			var i, o, word;
 
@@ -425,13 +458,11 @@ var Mangler = (function(global) {
 				var op = fn.merge({
 					to: '_',
 					from: 'auto',
-					rename: {},
 					ignore: []
 				}, fn.isObject(options) ? options : { to: options });
 				if(!fn.isArray(op.ignore)) op.ignore = [op.ignore];
 
 				if(op.ignore.indexOf(obj) !== -1) return obj;
-				obj = op.rename[obj] || obj;
 				obj = fn.tokenize(obj, op.from);
 
 				switch(op.to) {
@@ -851,6 +882,11 @@ var Mangler = (function(global) {
 				return true;
 			}
 			return false;
+		},
+
+		rename: function(dict) {
+			fn.rename(this.items, options);
+			return this;
 		},
 
 		transform: function(options) {
