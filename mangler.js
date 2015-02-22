@@ -247,6 +247,25 @@ var Mangler = (function(global) {
 			return obj.constructor === global.Object;
 		},
 
+		isEmpty: function(obj) {
+			var ret, it;
+
+			if(obj === null || typeof obj === 'undefined' || obj === '') return true;
+			console.log('passed initial');
+
+			it = fn.getIterator(obj)
+			if(!it) return false;
+			console.log('passed iterator');
+
+			ret = true;
+			fn.each(obj, function() {
+				console.log('found item');
+				ret = false;
+				return false;
+			});
+			return ret;
+		},
+
 		clone: function(obj) {
 			var c = fn.getCloner(obj);
 			return c ? c(obj) : obj;
