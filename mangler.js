@@ -251,17 +251,11 @@ var Mangler = (function(global) {
 			var ret, it;
 
 			if(obj === null || typeof obj === 'undefined' || obj === '') return true;
-			console.log('passed initial');
-
-			it = fn.getIterator(obj)
-			if(!it) return false;
-			console.log('passed iterator');
+			if(!(it = fn.getIterator(obj))) return false;
 
 			ret = true;
 			fn.each(obj, function() {
-				console.log('found item');
-				ret = false;
-				return false;
+				return ret = false;
 			});
 			return ret;
 		},
