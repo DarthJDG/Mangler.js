@@ -798,6 +798,45 @@ var Mangler = (function(global) {
 			}
 
 			return dst;
+		},
+
+		aggregate: function(obj, func, options) {
+			var op, grouped, g, a;
+
+			op = fn.merge({
+				path: false,
+				group: false
+			}, options);
+
+			if(typeof func === 'undefined') {
+				func = aggregators.sum;
+			} else if(typeof func === 'string') {
+				func = aggregators[func];
+			}
+
+			if(typeof func !== 'function') return;
+
+			a = { count: 0 };
+			grouped = {};
+			fn.each(obj, function(k, v) {
+				if(op.group) {
+					g = fn.get(v, op.group);
+					a = grouped[g];
+					if(!a) grouped[g] = a = { count: 0 };
+				}
+				if(op.path) v = fn.get(v, op.path);
+				a.count++;
+				func(k, v, a);
+			});
+
+			if(!op.group) {
+				return a.value;
+			} else {
+				fn.each(grouped, function(k, v) {
+					grouped[k] = v.value;
+				});
+				return grouped;
+			}
 		}
 
 	};
@@ -824,6 +863,10 @@ var Mangler = (function(global) {
 				}
 			}
 			return this;
+		},
+
+		aggregate: function(func, options) {
+			return fn.aggregate(this.items, func, options);
 		},
 
 		clone: function() {
@@ -908,6 +951,49 @@ var Mangler = (function(global) {
 		}
 
 	};
+
+	// Built-in aggregators
+
+	var aggregators = {
+		sum: function(k, v, a) {
+			a.value = a.count === 1 ? v : a.value + v;
+		},
+
+		mul: function(k, v, a) {
+			a.value = a.count === 1 ? v : a.value * v;
+		},
+
+		avg: function(k, v, a) {
+			a.value = a.count === 1 ? v : (a.value * (a.count - 1) + v) / a.count;
+		},
+
+		cnt: function(k, v, a) {
+			a.value = a.count;
+		},
+
+		min: function(k, v, a) {
+			a.value = a.count === 1 ? v : (a.value < v ? a.value : v);
+		},
+
+		max: function(k, v, a) {
+			a.value = a.count === 1 ? v : (a.value > v ? a.value : v);
+		},
+
+		array: function(k, v, a) {
+			if(!a.value) a.value = [];
+			a.value.push(v);
+		}
+	};
+
+	fn.merge(aggregators, {
+		'+': aggregators.sum,
+		'*': aggregators.mul,
+		'<': aggregators.min,
+		'>': aggregators.max,
+		'[]': aggregators.array,
+		add: aggregators.sum,
+		count: aggregators.cnt
+	});
 
 	// Register natively supported object types
 
