@@ -689,15 +689,15 @@ var Mangler = (function(global) {
 		},
 
 		deflate: function(obj, options) {
-			var more, limit, o;
-
-			// Apply default options
-			var op = fn.merge({
-				limit: 0,
-				transform: '_'
-			}, options);
+			var more, limit, o, op;
 
 			if(fn.isObject(obj)) {
+				// Apply default options
+				var op = fn.merge({
+					limit: 0,
+					transform: '_'
+				}, options);
+
 				more = false;
 				limit = op.limit;
 
@@ -724,6 +724,73 @@ var Mangler = (function(global) {
 					});
 
 					// Merge new deflated items back into object
+					fn.merge(obj, o);
+				} while(more && (op.limit === 0 || --limit > 0))
+			}
+		},
+
+		inflate: function(obj, options) {
+			var tokens, parentName, parent, last, num, temp, o, op;
+
+			if(fn.isObject(obj)) {
+				op = fn.merge({
+					limit: 0,
+					transform: '_',
+					from: '_'
+				}, options);
+
+				more = false;
+				limit = op.limit;
+
+				do {
+					// Create a new object to store the inflated items
+					o = {};
+
+					// Iterate through all properties
+					more = false;
+					fn.each(obj, function(prop, val) {
+						tokens = fn.tokenize(prop, op.from);
+
+						if(tokens.length > 1) {
+							// Take last token and add to object/array
+							last = tokens.pop();
+							parentName = fn.transform(tokens.join('_'), { to: op.from });
+							parent = obj[parentName] || o[parentName];
+
+							if(!fn.isObject(parent)) {
+								// Check if last is a positive integer
+								num = (/^0$|^[1-9][0-9]*$/).test(last);
+
+								if(fn.isArray(parent)) {
+									if(!num) {
+										// Non-numeric property found, convert parent array to object
+										temp = {};
+										fn.each(parent, function(k, v) {
+											temp[k] = v;
+										});
+										parent = temp;
+										delete obj[parentName];
+										o[parentName] = parent;
+									}
+								} else if(typeof parent === 'undefined') {
+									parent = num ? [] : {};
+									o[parentName] = parent;
+								} else {
+									// Parent is not object/array, don't change
+									return;
+								}
+							}
+
+							// Add value to parent object/array
+							parent[last] = val;
+							delete obj[prop];
+
+							// Set more flag if needed
+							if(tokens.length > 1) more = true;
+						}
+					});
+
+					// Merge new inflated items back into object
 					fn.merge(obj, o);
 				} while(more && (op.limit === 0 || --limit > 0))
 			}
