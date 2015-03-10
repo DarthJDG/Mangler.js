@@ -569,11 +569,7 @@ var Mangler = (function(global) {
 			if(fn.isArray(filter)) {
 				filter = filterToRegExp(filter.join('|'))
 			} else if(!(filter instanceof RegExp)) {
-				if(typeof filter === 'string') {
-					filter = filterToRegExp(filter);
-				} else {
-					return this;
-				}
+				filter = filterToRegExp(typeof filter === 'string' ? filter : '*');
 			}
 
 			// Apply default options
