@@ -581,7 +581,8 @@ var Mangler = (function(global) {
 				method: 'add',
 				key: false,
 				prop: false,
-				drilldown: false
+				drilldown: false,
+				test: {}
 			}, options);
 			op.key = op.key === true ? 'key' : op.key;
 			op.prop = op.prop === true ? 'prop' : op.prop;
@@ -590,7 +591,7 @@ var Mangler = (function(global) {
 				var item, i, m;
 
 				path = path + (typeof k !== 'string' ? '[' + k + ']' : '.' + k);
-				if(filter.test(path)) {
+				if(filter.test(path) && fn.test(v, op.test)) {
 					// Add keys and props to objects
 					if(op.key !== false || op.prop !== false) {
 						if(fn.isArray(v)) {
