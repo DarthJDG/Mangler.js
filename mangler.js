@@ -753,9 +753,29 @@ var Mangler = (function(global) {
 
 						if(tokens.length > 1) {
 							// Take last token and add to object/array
-							last = tokens.pop();
+							last = fn.transform(tokens.pop(), { to: op.transform, from: op.from });
 							parentName = fn.transform(tokens.join('_'), { to: op.from });
 							parent = obj[parentName] || o[parentName];
+
+							// Set more flag if needed
+							if(tokens.length > 1) more = true;
+
+							// If last iteration, transform parent name
+							if((tokens.length > 1 && limit === 1) || tokens.length === 1) {
+								temp = fn.transform(parentName, { to: op.transform, from: '_' });
+								if(parentName !== temp) {
+									if(obj[parentName]) {
+										obj[temp] = obj[parentName];
+										delete obj[parentName];
+									}
+									if(o[parentName]) {
+										o[temp] = o[parentName];
+										delete o[parentName];
+									}
+									parentName = temp;
+									parent = obj[parentName] || o[parentName];
+								}
+							}
 
 							if(!fn.isObject(parent)) {
 								// Check if last is a positive integer
@@ -784,9 +804,6 @@ var Mangler = (function(global) {
 							// Add value to parent object/array
 							parent[last] = val;
 							delete obj[prop];
-
-							// Set more flag if needed
-							if(tokens.length > 1) more = true;
 						}
 					});
 
