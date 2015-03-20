@@ -886,7 +886,7 @@ var Mangler = (function(global) {
 		},
 
 		aggregate: function(obj, func, options) {
-			var op, grouped, g, a;
+			var op, grouped, groupFunc, g, a;
 
 			op = fn.merge({
 				path: false,
@@ -901,11 +901,13 @@ var Mangler = (function(global) {
 
 			if(typeof func !== 'function') return;
 
+			groupFunc = (typeof op.group === 'function');
+
 			a = { count: 0 };
 			grouped = {};
 			fn.each(obj, function(k, v) {
 				if(op.group) {
-					g = fn.get(v, op.group);
+					g = groupFunc ? op.group(k, v) : fn.get(v, op.group);
 					a = grouped[g];
 					if(!a) grouped[g] = a = { count: 0 };
 				}
