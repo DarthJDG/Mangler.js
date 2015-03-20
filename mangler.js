@@ -722,8 +722,10 @@ var Mangler = (function(global) {
 
 					// Merge new deflated items back into object
 					fn.merge(obj, o);
-				} while(more && (op.limit === 0 || --limit > 0))
+				} while(more && (op.limit === 0 || --limit > 0));
 			}
+
+			return obj;
 		},
 
 		inflate: function(obj, options) {
@@ -806,8 +808,10 @@ var Mangler = (function(global) {
 
 					// Merge new inflated items back into object
 					fn.merge(obj, o);
-				} while(more && (op.limit === 0 || --limit > 0))
+				} while(more && (op.limit === 0 || --limit > 0));
 			}
+
+			return obj;
 		},
 
 		get: function(obj, i) {
