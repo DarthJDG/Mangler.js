@@ -1001,6 +1001,13 @@ var Mangler = (function(global) {
 			return fn.index(this.items, generator, delimiter);
 		},
 
+		inflate: function(options) {
+			fn.each(this.items, function(key, obj) {
+				fn.inflate(obj, options);
+			});
+			return this;
+		},
+
 		last: function(cond) {
 			return fn.last(this.items, cond);
 		},
