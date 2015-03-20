@@ -891,7 +891,7 @@ var Mangler = (function(global) {
 			op = fn.merge({
 				path: false,
 				group: false
-			}, options);
+			}, fn.isObject(options) ? options : { path: options });
 
 			if(typeof func === 'undefined') {
 				func = aggregators.sum;
