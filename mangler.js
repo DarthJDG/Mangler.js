@@ -907,11 +907,11 @@ var Mangler = (function(global) {
 			grouped = {};
 			fn.each(obj, function(k, v) {
 				if(op.group) {
-					g = groupFunc ? op.group(k, v) : fn.get(v, op.group);
+					g = groupFunc ? op.group(k, v) : fn.getPath(v, op.group);
 					a = grouped[g];
 					if(!a) grouped[g] = a = { count: 0 };
 				}
-				if(op.value) v = fn.get(v, op.value);
+				if(op.value) v = fn.getPath(v, op.value);
 				a.count++;
 				func(k, v, a);
 			});
