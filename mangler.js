@@ -889,9 +889,9 @@ var Mangler = (function(global) {
 			var op, grouped, groupFunc, g, a;
 
 			op = fn.merge({
-				path: false,
+				value: false,
 				group: false
-			}, fn.isObject(options) ? options : { path: options });
+			}, fn.isObject(options) ? options : { value: options });
 
 			if(typeof func === 'undefined') {
 				func = aggregators.sum;
@@ -911,16 +911,16 @@ var Mangler = (function(global) {
 					a = grouped[g];
 					if(!a) grouped[g] = a = { count: 0 };
 				}
-				if(op.path) v = fn.get(v, op.path);
+				if(op.value) v = fn.get(v, op.value);
 				a.count++;
 				func(k, v, a);
 			});
 
 			if(!op.group) {
-				return a.value;
+				return a.result;
 			} else {
 				fn.each(grouped, function(k, v) {
-					grouped[k] = v.value;
+					grouped[k] = v.result;
 				});
 				return grouped;
 			}
@@ -1050,32 +1050,32 @@ var Mangler = (function(global) {
 
 	var aggregators = {
 		sum: function(k, v, a) {
-			a.value = a.count === 1 ? v : a.value + v;
+			a.result = a.count === 1 ? v : a.result + v;
 		},
 
 		mul: function(k, v, a) {
-			a.value = a.count === 1 ? v : a.value * v;
+			a.result = a.count === 1 ? v : a.result * v;
 		},
 
 		avg: function(k, v, a) {
-			a.value = a.count === 1 ? v : (a.value * (a.count - 1) + v) / a.count;
+			a.result = a.count === 1 ? v : (a.result * (a.count - 1) + v) / a.count;
 		},
 
 		cnt: function(k, v, a) {
-			a.value = a.count;
+			a.result = a.count;
 		},
 
 		min: function(k, v, a) {
-			a.value = a.count === 1 ? v : (a.value < v ? a.value : v);
+			a.result = a.count === 1 ? v : (a.result < v ? a.result : v);
 		},
 
 		max: function(k, v, a) {
-			a.value = a.count === 1 ? v : (a.value > v ? a.value : v);
+			a.result = a.count === 1 ? v : (a.result > v ? a.result : v);
 		},
 
 		array: function(k, v, a) {
-			if(!a.value) a.value = [];
-			a.value.push(v);
+			if(!a.result) a.result = [];
+			a.result.push(v);
 		}
 	};
 
