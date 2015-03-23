@@ -944,7 +944,7 @@ var Mangler = (function(global) {
 		add: function(item) {
 			if(typeof item !== 'undefined') {
 				if(fn.isArray(item)) {
-					this.items = this.items.concat(item);
+					global.Array.prototype.push.apply(this.items, item);
 				} else {
 					this.items.push(item);
 				}
@@ -954,6 +954,11 @@ var Mangler = (function(global) {
 
 		aggregate: function(func, options) {
 			return fn.aggregate(this.items, func, options);
+		},
+
+		clear: function() {
+			this.items.length = 0;
+			return this;
 		},
 
 		clone: function() {
@@ -982,12 +987,14 @@ var Mangler = (function(global) {
 		},
 
 		extract: function(filter, options) {
-			this.items = fn.extract(this.items, filter, options);
+			var res = fn.extract(this.items, filter, options);
+			this.clear().add(res);
 			return this;
 		},
 
 		filter: function(cond) {
-			this.items = this.find(cond);
+			var res = this.find(cond);
+			this.clear().add(res);
 			return this;
 		},
 
