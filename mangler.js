@@ -626,6 +626,19 @@ var Mangler = (function(global) {
 			return ret;
 		},
 
+		filter: function(obj, cond) {
+			if(fn.isArray(obj)) {
+				var res = fn.find(obj, cond);
+				obj.length = 0;
+				global.Array.prototype.push.apply(obj, res);
+			} else if (fn.isObject(obj)) {
+				fn.each(obj, function(k, v) {
+					if(!fn.test(v, cond)) delete obj[k];
+				});
+			}
+			return obj;
+		},
+
 		find: function(obj, cond) {
 			var arr = [];
 			fn.each(obj, function(k, v) {
@@ -994,8 +1007,7 @@ var Mangler = (function(global) {
 		},
 
 		filter: function(cond) {
-			var res = this.find(cond);
-			this.clear().add(res);
+			fn.filter(this.items, cond);
 			return this;
 		},
 
