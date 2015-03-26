@@ -1038,6 +1038,11 @@ var Mangler = (function(global) {
 			return fn.last(this.items, cond);
 		},
 
+		limit: function(size) {
+			if(this.items.length >= size) this.items.length = size;
+			return this;
+		},
+
 		push: function(item) {
 			if(typeof item !== 'undefined') {
 				this.items.push(item);
