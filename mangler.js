@@ -446,7 +446,7 @@ var Mangler = (function(global) {
 		},
 
 		transform: function(obj, options) {
-			var i, o, word;
+			var i, o, word, delim;
 
 			if(fn.isArray(obj)) {
 
@@ -472,18 +472,22 @@ var Mangler = (function(global) {
 					to: '_',
 					from: 'auto',
 					ignore: []
-				}, fn.isObject(options) ? options : { to: options });
+				}, fn.isObject(options) ? options : { to: options || '_' });
 				if(!fn.isArray(op.ignore)) op.ignore = [op.ignore];
 
 				if(op.ignore.indexOf(obj) !== -1) return obj;
 				obj = fn.tokenize(obj, op.from);
+				delim = op.to[op.to.length - 1];
 
 				switch(op.to) {
-					case 'upper_':
-						return obj.join('_').toUpperCase();
+					case 'upper' + delim:
+						return obj.join(delim).toUpperCase();
 
-					case 'lower_':
-						return obj.join('_').toLowerCase();
+					case 'lower' + delim:
+						return obj.join(delim).toLowerCase();
+
+					case delim:
+						return obj.join(delim);
 
 					case 'title':
 					case 'camel':
@@ -495,9 +499,6 @@ var Mangler = (function(global) {
 							obj[i] = word;
 						}
 						return obj.join('');
-
-					case '.':
-						return obj.join('.');
 
 					default:
 						// Default to snake_case
@@ -513,14 +514,14 @@ var Mangler = (function(global) {
 		tokenize: function(str, from) {
 			if(fn.isArray(str)) return str;
 
-			switch(from) {
-				case 'upper_':
-				case 'lower_':
-				case '_':
-					return str.split('_');
+			from = from || 'auto';
+			var delim = from[from.length - 1];
 
-				case '.':
-					return str.split('.');
+			switch(from) {
+				case 'upper' + delim:
+				case 'lower' + delim:
+				case delim:
+					return str.split(delim);
 
 				case 'title':
 				case 'camel':
