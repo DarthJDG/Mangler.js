@@ -1040,7 +1040,7 @@ var Mangler = (function(global) {
 		},
 
 		limit: function(size) {
-			if(this.items.length >= size) this.items.length = size;
+			if(size > 0 && this.items.length >= size) this.items.length = size;
 			return this;
 		},
 
