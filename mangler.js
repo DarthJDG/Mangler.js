@@ -396,13 +396,19 @@ var Mangler = (function(global) {
 
 			// Have to let 'function' through the first check to fix RegExp bug in old Androids
 			if(cond === null || (typeof cond !== 'object' && typeof cond !== 'function')) {
-				res = obj === cond;
+				if(fn.isArray(obj)) {
+					res = fn.test(obj, { $elemMatch: cond });
+				} else {
+					res = obj === cond;
+				}
 			} else if(cond.constructor === global.Object) {
 				fn.each(cond, processConditions);
 			} else if(cond.constructor === global.Array) {
 				res = fn.test(obj, { $all: cond });
 			} else if(cond.constructor === global.Function) {
 				res = fn.test(obj, { $where: cond });
+			} else if(fn.isArray(obj)) {
+				res = fn.test(obj, { $elemMatch: cond });
 			} else if(cond.constructor === global.RegExp) {
 				res = cond.test(obj);
 			} else {
@@ -837,7 +843,7 @@ var Mangler = (function(global) {
 			// Path has to be string
 			if(typeof path !== 'string') return;
 
-			var k;
+			var k, nk, arr;
 			while(path.length !== 0 && typeof obj !== 'undefined') {
 				// Trim starting dot if any
 				if(path[0] === '.') {
@@ -848,15 +854,31 @@ var Mangler = (function(global) {
 					// Path starts with an array index
 					k = path.match(/^\[([^\]]*)\]/)[1];
 					path = path.slice(k.length + 2);
-					k = parseInt(k, 10);
-					if(isNaN(k)) return;
 				} else {
 					// Must be a property name
 					k = path.match(/^([^\.\[]*)/)[0];
 					path = path.slice(k.length);
-					if(!k.length) return;
 				}
-				obj = fn.get(obj, k);
+
+				if(!k.length) return;
+				if(fn.isArray(obj)) {
+					nk = parseInt(k, 10);
+					if(isNaN(nk) || '' + nk !== k) {
+						// Requesting an array item with a non-numeric key
+						// Extract an array of values from its items
+						arr = [];
+						fn.each(obj, function(i, v) {
+							v = fn.getPath(v, k);
+							if(typeof v !== 'undefined') arr.push(v);
+						});
+						if(!arr.length) return;
+						obj = arr;
+					} else {
+						obj = fn.get(obj, nk);
+					}
+				} else {
+					obj = fn.get(obj, k);
+				}
 			}
 
 			return obj;
