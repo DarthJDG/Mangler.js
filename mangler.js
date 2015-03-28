@@ -654,6 +654,10 @@ var Mangler = (function(global) {
 			return arr;
 		},
 
+		findOne: function(obj, cond) {
+			return fn.first(obj, cond);
+		},
+
 		first: function(obj, cond) {
 			var ret;
 			if(typeof cond === 'undefined') cond = {};
@@ -1036,6 +1040,10 @@ var Mangler = (function(global) {
 
 		find: function(cond) {
 			return fn.find(this.items, cond);
+		},
+
+		findOne: function(cond) {
+			return fn.first(this.items, cond);
 		},
 
 		first: function(cond) {
