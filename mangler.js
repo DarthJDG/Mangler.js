@@ -533,6 +533,11 @@ var Mangler = (function(global) {
 				case 'camel':
 					break;
 
+				case 'path':
+					str = str.replace(/\[/g, '.');
+					str = str.replace(/\]|^\.|\.$/g, '');
+					return str.split('.');
+
 				default:
 					// Auto
 					if(str.indexOf('_') !== -1) return str.split('_');
@@ -846,28 +851,17 @@ var Mangler = (function(global) {
 		getPath: function(obj, path) {
 			// Path has to be string
 			if(typeof path !== 'string') return;
+			if(path === '') return obj;
 
-			var k, nk, arr;
-			while(path.length !== 0 && typeof obj !== 'undefined') {
-				// Trim starting dot if any
-				if(path[0] === '.') {
-					path = path.slice(1);
-				}
-
-				if(path[0] === '[') {
-					// Path starts with an array index
-					k = path.match(/^\[([^\]]*)\]/)[1];
-					path = path.slice(k.length + 2);
-				} else {
-					// Must be a property name
-					k = path.match(/^([^\.\[]*)/)[0];
-					path = path.slice(k.length);
-				}
-
-				if(!k.length) return;
+			var k, arr, ok = true;
+			var tokens = fn.tokenize(path, 'path');
+			fn.each(tokens, function(i, k) {
+				if(typeof obj === 'undefined') return false;
+				if(!k.length) return ok = false;
 				if(fn.isArray(obj)) {
-					nk = parseInt(k, 10);
-					if(isNaN(nk) || '' + nk !== k) {
+					if((/^0$|^[1-9][0-9]*$/).test(k)) {
+						obj = fn.get(obj, k);
+					} else {
 						// Requesting an array item with a non-numeric key
 						// Extract an array of values from its items
 						arr = [];
@@ -875,17 +869,15 @@ var Mangler = (function(global) {
 							v = fn.getPath(v, k);
 							if(typeof v !== 'undefined') arr.push(v);
 						});
-						if(!arr.length) return;
+						if(!arr.length) return ok = false;
 						obj = arr;
-					} else {
-						obj = fn.get(obj, nk);
 					}
 				} else {
 					obj = fn.get(obj, k);
 				}
-			}
+			});
 
-			return obj;
+			if(ok) return obj; else return;
 		},
 
 		merge: function(dst, src) {
