@@ -1082,7 +1082,7 @@ var Mangler = (function(global) {
 		},
 
 		rename: function(dict) {
-			fn.rename(this.items, options);
+			fn.rename(this.items, dict);
 			return this;
 		},
 
