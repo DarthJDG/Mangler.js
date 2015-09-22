@@ -266,7 +266,7 @@ var Mangler = (function(global) {
 		},
 
 		test: function(obj, cond) {
-			var temp, res = true;
+			var res = true;
 
 			var processConditions = function(k, v) {
 				switch(k) {
@@ -595,7 +595,7 @@ var Mangler = (function(global) {
 			op.key = op.key === true ? 'key' : op.key;
 			op.prop = op.prop === true ? 'prop' : op.prop;
 
-			fn.explore(obj, function(k, v, path, state) {
+			fn.explore(obj, function(k, v, path) {
 				var item, i, m;
 
 				path = path + (typeof k !== 'string' ? '[' + k + ']' : '.' + k);
@@ -680,8 +680,7 @@ var Mangler = (function(global) {
 
 			var index = {},
 				isFunction = (typeof generator === 'function'),
-				isArray = fn.isArray(generator),
-				ret;
+				isArray = fn.isArray(generator);
 
 			fn.each(obj, function(i, v) {
 				var key;
@@ -853,7 +852,7 @@ var Mangler = (function(global) {
 			if(typeof path !== 'string') return;
 			if(path === '') return obj;
 
-			var k, arr, ok = true;
+			var arr, ok = true;
 			var tokens = fn.tokenize(path, 'path');
 			fn.each(tokens, function(i, k) {
 				if(typeof obj === 'undefined') return false;
