@@ -757,7 +757,7 @@ var Mangler = (function(global) {
 		},
 
 		inflate: function(obj, options) {
-			var tokens, parentName, parent, last, num, temp, o, op;
+			var tokens, parentName, parent, last, num, temp, more, limit, o, op;
 
 			if(fn.isObject(obj)) {
 				op = fn.merge({
