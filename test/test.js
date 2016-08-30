@@ -2,7 +2,21 @@
 
 	QUnit.module('Utility');
 
-	// TODO: mergeType, registerType, compareType
+	// TODO: mergeType, registerType
+
+	QUnit.test('Mangler.compareType', function(assert) {
+		assert.expect(9);
+
+		assert.ok(Mangler.compareType('A', 'A'), 'strict equal');
+		assert.ok(Mangler.compareType(null, null), 'null == null');
+		assert.ok(Mangler.compareType(1, 2), 'number');
+		assert.ok(Mangler.compareType('A', 'B'), 'string');
+		assert.ok(Mangler.compareType(new Date(), Date), 'Date');
+		assert.ok(Mangler.compareType(function(){}, Function), 'function');
+		assert.ok(!Mangler.compareType(function(){}, function(){}), 'two functions');
+		assert.ok(Mangler.compareType({}, Object), 'object');
+		assert.ok(Mangler.compareType([], Array), 'array');
+	});
 
 	QUnit.test('Mangler.getIterator', function(assert) {
 		assert.expect(1);
@@ -153,10 +167,9 @@
 
 	QUnit.module('Static');
 
-	// TODO: test
 	QUnit.test('Mangler.test', function(assert) {
-		assert.expect(99);
-		
+		assert.expect(165);
+
 		function good(arg1, op, arg2) {
 			var cond = {};
 			cond[op] = arg2;
@@ -168,10 +181,10 @@
 			cond[op] = arg2;
 			assert.ok(!Mangler.test(arg1, cond), 'false: ' + arg1 + ' ' + op + ' ' + arg2);
 		}
-		
+
 		var arg1s = [2, 2, 2, 'B', 'B', 'B'];
 		var arg2s = [1, 2, 3, 'A', 'B', 'C'];
-		
+
 		function runAll(op, ok) {
 			for(var i = 0; i < arg1s.length; i++) {
 				if(ok[i]) {
@@ -181,7 +194,7 @@
 				}
 			}
 		}
-		
+
 		// Simple comparisons
 		runAll('$gt',  [1, 0, 0, 1, 0, 0]);
 		runAll('>',    [1, 0, 0, 1, 0, 0]);
@@ -197,7 +210,7 @@
 		runAll('===',  [0, 1, 0, 0, 1, 0]);
 		runAll('==',   [0, 1, 0, 0, 1, 0]);
 		runAll('!=',   [1, 0, 1, 1, 0, 1]);
-		
+
 		// Strict checks
 		bad(1, '$ne', 1);
 		good(1, '$ne', '1');
@@ -211,7 +224,7 @@
 		good(1, '==', '1');
 		bad(1, '!=', 1);
 		bad(1, '!=', '1');
-		
+
 		// Check implicit and relations
 		assert.ok(Mangler.test(2, { $gt: 1, $lt: 3 }), 'implicit and: both true');
 		assert.ok(!Mangler.test(2, { $eq: 2, $lt: 2 }), 'implicit and: one true');
@@ -221,26 +234,99 @@
 		assert.ok(Mangler.test(2, { $or: [{ $gt: 1 }, { $lt: 3 }] }), '$or: both true');
 		assert.ok(Mangler.test(2, { $or: [{ $eq: 2 }, { $lt: 2 }] }), '$or: one true');
 		assert.ok(!Mangler.test(2, { $or: [{ $lt: 2 }, { $gt: 2 }] }), '$or: none true');
-		
+
 		// $all operator
 		assert.ok(Mangler.test([1, 2, 3], { $all: [1] }), '$all: 1 out of 3');
 		assert.ok(Mangler.test([1, 2, 3], { $all: [1, 2] }), '$all: 2 out of 3');
 		assert.ok(Mangler.test([1, 2, 3], { $all: [1, 2, 3] }), '$all: 3 out of 3');
 		assert.ok(!Mangler.test([1, 2, 3], { $all: [1, 2, 3, 4] }), '$all: 1 extra');
-		
+
 		// $size operator
 		assert.ok(Mangler.test([1, 2, 3], { $size: 3 }), '$size: true');
 		assert.ok(!Mangler.test([1, 2, 3], { $size: 2 }), '$size: false');
-		
-		// TODO: $elemMatch
+
+		// $elemMatch operator
+		assert.ok(Mangler.test([{ a: 1 }, { a: 2 }], { $elemMatch: { a: 2 }}), '$elemMatch pass');
+		assert.ok(!Mangler.test([{ a: 1 }, { a: 2 }], { $elemMatch: { a: 3 }}), '$elemMatch fail');
 
 		// $in operator
-		assert.ok(Mangler.test([1, 2, 3], { $in: [1] }), '$in: 1 out of 3');
-		assert.ok(Mangler.test([1, 2, 3], { $in: [1, 2] }), '$in: 2 out of 3');
-		assert.ok(Mangler.test([1, 2, 3], { $in: [1, 2, 3] }), '$in: 3 out of 3');
-		assert.ok(Mangler.test([1, 2, 3], { $in: [1, 2, 3, 4] }), '$in: 1 extra');
-		assert.ok(Mangler.test(1, { $in: [1, 2, 3, 4] }), '$in: value matches');
-		assert.ok(!Mangler.test(5, { $in: [1, 2, 3, 4] }), '$in: value does not match');
+		assert.ok(Mangler.test([1, 2], { $in: [1] }), '$in: 2 in 1 with match');
+		assert.ok(Mangler.test([1, 2], { $in: [1, 2] }), '$in: 2 matching sets');
+		assert.ok(Mangler.test([1, 2], { $in: [1, 3] }), '$in: 2 in 2 with 1 match');
+		assert.ok(!Mangler.test([1, 2], { $in: [4] }), '$in: 2 in 1 with no match');
+		assert.ok(Mangler.test(1, { $in: [1, 2, 3] }), '$in: value matches');
+		assert.ok(!Mangler.test(4, { $in: [1, 2, 3] }), '$in: value does not match');
+
+		// $nin operator
+		assert.ok(!Mangler.test([1, 2], { $nin: [1] }), '$nin: 2 in 1 with match');
+		assert.ok(!Mangler.test([1, 2], { $nin: [1, 2] }), '$nin: 2 matching sets');
+		assert.ok(!Mangler.test([1, 2], { $nin: [1, 3] }), '$nin: 2 in 2 with 1 match');
+		assert.ok(Mangler.test([1, 2], { $nin: [4] }), '$nin: 2 in 1 with no match');
+		assert.ok(!Mangler.test(1, { $nin: [1, 2, 3] }), '$nin: value matches');
+		assert.ok(Mangler.test(4, { $nin: [1, 2, 3] }), '$nin: value does not match');
+
+		// $not operator
+		assert.ok(!Mangler.test(2, { $not: { $gt: 1, $lt: 3 } }), '$not implicit and: both true');
+		assert.ok(Mangler.test(2, { $not: { $eq: 2, $lt: 2 } }), '$not implicit and: one true');
+		assert.ok(Mangler.test(2, { $not: { $lt: 2, $gt: 2 } }), '$not implicit and: none true');
+
+		// $nor operator
+		assert.ok(!Mangler.test(2, { $nor: [{ $gt: 1 }, { $lt: 3 }] }), '$nor: both true');
+		assert.ok(!Mangler.test(2, { $nor: [{ $eq: 2 }, { $lt: 2 }] }), '$nor: one true');
+		assert.ok(Mangler.test(2, { $nor: [{ $lt: 2 }, { $gt: 2 }] }), '$nor: none true');
+
+		// $exists operator
+		assert.ok(Mangler.test({ a: 1 }, { a: { $exists: true } }), '$exists: check if exists (true)');
+		assert.ok(!Mangler.test({ a: 1 }, { a: { $exists: false } }), '$exists: check if does not exist (false)');
+		assert.ok(!Mangler.test({ a: 1 }, { b: { $exists: true } }), '$exists: check if exists (false)');
+		assert.ok(Mangler.test({ a: 1 }, { b: { $exists: false } }), '$exists: check if does not exist (true)');
+
+		// $type operator
+		assert.ok(Mangler.test('A', { $type: 'A' }), '$type: strict equal');
+		assert.ok(Mangler.test(null, { $type: null }), '$type: null == null');
+		assert.ok(Mangler.test(1, { $type: 2 }), '$type: number');
+		assert.ok(Mangler.test('A', { $type: 'B' }), '$type: string');
+		assert.ok(Mangler.test(new Date(), { $type: Date }), '$type: Date');
+		assert.ok(Mangler.test(function(){}, { $type: Function }), '$type: function');
+		assert.ok(!Mangler.test(function(){}, { $type: function(){} }), '$type: two functions');
+		assert.ok(Mangler.test({}, { $type: Object }), '$type: object');
+		assert.ok(Mangler.test([], { $type: Array }), '$type: array');
+
+		// $mod operator
+		assert.ok(Mangler.test(4, { $mod: [2, 0] }), '$mod: divisible by 2 (true)');
+		assert.ok(Mangler.test(5, { $mod: [2, 1] }), '$mod: remainder = 1 (true)');
+		assert.ok(!Mangler.test(5, { $mod: [2, 0] }), '$mod: divisible by 2 (false)');
+		assert.ok(!Mangler.test(4, { $mod: [2, 1] }), '$mod: remainder = 1 (false)');
+
+		// $where operator
+		assert.ok(Mangler.test({ a: 'ABC' }, { $where: function(obj) { return obj.a === 'ABC' }}), '$where test');
+
+		// literal check
+		assert.ok(Mangler.test({ a: 1, b: 'A' }, { a: 1, b: 'A' }), 'literal: identity');
+		assert.ok(Mangler.test({ a: 1, b: 'A' }, { a: 1 }), 'literal: true (number)');
+		assert.ok(Mangler.test({ a: 1, b: 'A' }, { b: 'A' }), 'literal: true (string)');
+		assert.ok(!Mangler.test({ a: 1, b: 'A' }, { a: 2 }), 'literal: false');
+		assert.ok(Mangler.test({ a: 1, b: 'A', c: 3 }, { a: 1, b: 'A' }), 'literal: multiple matches');
+		assert.ok(!Mangler.test({ a: 1, b: 'A' }, { a: 1, b: 'B' }), 'literal: one match, one fail');
+		assert.ok(Mangler.test({ a: 1, b: 'ABC' }, { b: /^A./ }), 'literal: regex pass');
+		assert.ok(!Mangler.test({ a: 1, b: 'ABC' }, { b: /^B./ }), 'literal: regex fail');
+		assert.ok(Mangler.test({ a: 1, b: { c: 'A' } }, { a: 1, 'b.c': 'A' }), 'literal: path test');
+		assert.ok(Mangler.test({ a: 1, b: { c: 'A' } }, { a: 1, b: { c: 'A' } }), 'literal: nest test');
+		assert.ok(Mangler.test({ a: 1, b: [{ c: 'A' }, { c: 'B' }] }, { a: 1, b: { c: 'A' } }), 'literal: nest array test pass');
+		assert.ok(!Mangler.test({ a: 1, b: [{ c: 'A' }, { c: 'B' }] }, { a: 1, b: { c: 'C' } }), 'literal: nest array test fail');
+
+		// implicit $all operator
+		assert.ok(Mangler.test([1, 2, 3], [1]), 'implicit $all: 1 out of 3');
+		assert.ok(Mangler.test([1, 2, 3], [1, 2]), 'implicit $all: 2 out of 3');
+		assert.ok(Mangler.test([1, 2, 3], [1, 2, 3]), 'implicit $all: 3 out of 3');
+		assert.ok(!Mangler.test([1, 2, 3], [1, 2, 3, 4]), 'implicit $all: 1 extra');
+
+		// implicit $where operator
+		assert.ok(Mangler.test({ a: 'ABC' }, function(obj) { return obj.a === 'ABC' }), 'implicit $where test');
+
+		// implicit $elemMatch
+		assert.ok(Mangler.test([{ a: 1 }, { a: 2 }], { a: 2 }), 'implicit $elemMatch pass');
+		assert.ok(!Mangler.test([{ a: 1 }, { a: 2 }], { a: 3 }), 'implicit $elemMatch fail');
 	});
 
 	QUnit.test('Mangler.rename', function(assert) {
@@ -491,16 +577,16 @@
 
 	QUnit.test('Mangler.inflate', function(assert) {
 		assert.expect(6);
-		
+
 		var o = {
 			one_two_three: 'value',
 			arr_0: 1,
 			arr_1: 2,
 			arr_2: 3
 		};
-		
+
 		assert.deepEqual(Mangler.inflate([Mangler.clone(o)]), [o], 'return non-object argument as is');
-		
+
 		assert.deepEqual(Mangler.inflate(Mangler.clone(o)), {
 			one: {
 				two: {
@@ -530,7 +616,7 @@
 			'arr#1': 2,
 			'arr#2': 3
 		};
-		
+
 		assert.deepEqual(Mangler.inflate(Mangler.clone(o)), o, 'unrecognized format, no changes');
 
 		assert.deepEqual(Mangler.inflate(Mangler.clone(o), { from: '#' }), {
