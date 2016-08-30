@@ -421,7 +421,7 @@ var Mangler = (function(global) {
 		rename: function(obj, dict) {
 			var i, o;
 
-			if(!fn.isObject(dict)) return;
+			if(!fn.isObject(dict)) return obj;
 
 			if(fn.isArray(obj)) {
 
