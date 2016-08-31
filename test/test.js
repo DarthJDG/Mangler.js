@@ -1,8 +1,59 @@
 (function(global, undefined) {
 
+	QUnit.module('Global');
+
+	QUnit.test('Mangler', function(assert) {
+		assert.expect(4);
+
+		assert.deepEqual(Mangler().items, [], 'empty object');
+		assert.deepEqual(Mangler([]).items, [], 'empty array init');
+		assert.deepEqual(Mangler(1).items, [1], 'single item init');
+		assert.deepEqual(Mangler([1, 2, 3]).items, [1, 2, 3], 'array init');
+	});
+
 	QUnit.module('Utility');
 
-	// TODO: mergeType, registerType
+	QUnit.test('Mangler.registerType, Mangler.mergeType', function(assert) {
+		assert.expect(7);
+
+		function MyObject() { }
+
+		var o = new MyObject();
+
+		assert.strictEqual(typeof Mangler.get(o, 'a'), 'undefined', 'not registered, get fails');
+
+		Mangler.registerType(MyObject, {
+			get: function(obj, k) {
+				if(k === 'a') return 1;
+			}
+		});
+
+		assert.strictEqual(Mangler.get(o, 'a'), 1, 'registered, got value');
+
+		var result = '';
+		Mangler.each(o, function(k, v) { result += v; });
+		assert.strictEqual(result, '', 'no iterator yet, fail');
+
+		Mangler.mergeType(MyObject, {
+			each: function(obj, callback) {
+				if(callback(0, 'A') === false) return;
+				if(callback(1, 'B') === false) return;
+				if(callback(2, 'C') === false) return;
+			}
+		});
+
+		result = '';
+		Mangler.each(o, function(k, v) { result += v; });
+		assert.strictEqual(result, 'ABC', 'iterator merged, ok');
+		assert.strictEqual(Mangler.get(o, 'a'), 1, 'get is still registered');
+
+		Mangler.registerType(MyObject, {});
+
+		result = '';
+		Mangler.each(o, function(k, v) { result += v; });
+		assert.strictEqual(result, '', 'unregistered');
+		assert.strictEqual(typeof Mangler.get(o, 'a'), 'undefined', 'unregistered');
+	});
 
 	QUnit.test('Mangler.compareType', function(assert) {
 		assert.expect(9);
@@ -19,8 +70,6 @@
 	});
 
 	QUnit.test('Mangler.getIterator', function(assert) {
-		assert.expect(1);
-
 		var m = Mangler(['A', 'B', 'C']);
 		var result = '';
 
@@ -45,8 +94,6 @@
 	});
 
 	QUnit.test('Mangler.getGetter', function(assert) {
-		assert.expect(1);
-
 		var m = Mangler(['A', 'B', 'C']);
 		var result = Mangler.getGetter(m)(m, 1);
 
@@ -433,15 +480,184 @@
 		assert.strictEqual(result, 'a1b2c3', 'object');
 	});
 
-	// TODO: explore
+	QUnit.test('Mangler.explore', function(assert) {
+		assert.expect(2);
 
-	// TODO: extract
+		var data = [
+			{ child: {}	},
+			{ children: [{}, {}] }
+		];
 
-	// TODO: filter
+		// Optional prefix to the callback's path parameter
+		var rootPath = '';
 
-	// TODO: find
+		// State object passed at root level
+		var initialState = { depth: 0 };
 
-	// TODO: findOne
+		Mangler.explore(data, function(key, value, path, state) {
+		if(Mangler.isObject(value)) {
+			if(path !== state.path) {
+				// There was a change in parent path, increase depth
+				// It makes sure we don't increase depth for every sibling
+				state.path = path;
+				state.depth++;
+			}
+				value.depth = state.depth;
+			}
+		}, rootPath, initialState);
+
+		assert.deepEqual(data, [
+			{ depth: 1, child: { depth: 2 } },
+			{ depth: 1, children: [{ depth: 2 }, { depth: 2 }] }
+		], 'example 1');
+
+		data = {
+			companies: [
+				{
+					name: 'Test Company',
+					manager: { name: 'Mr Smith' },
+					sales: [
+						{ name: 'John' },
+						{ name: 'Jack' }
+					],
+					engineers: [
+						{ name: 'Fred' },
+						{ name: 'Barney' }
+					]
+				},
+				{
+					name: 'Another Co',
+					manager: { name: 'Mr Jackson' },
+					sales: [
+						{ name: 'Bill' }
+					],
+					marketing: [
+						{ name: 'Mark' },
+						{ name: 'Rob' }
+					]
+				}
+			]
+		};
+
+		Mangler.explore(data, function(k, v, path, state) {
+			if(v.manager) {
+				// This is a company, add company name to manager
+				v.manager.company = v.name;
+
+				// Reset counter
+				v.manager.supervises = 0;
+
+				// Add manager to state object
+				state.manager = v.manager;
+			} else if(v.name && k !== 'manager') {
+				// It has a name and not the manager, must be another employee
+				state.manager.supervises += 1;
+			}
+		}, '', {});
+
+		assert.deepEqual(Mangler.extract(data, 'manager'), [
+			{ company: 'Test Company', name: 'Mr Smith', supervises: 4 },
+			{ company: 'Another Co', name: 'Mr Jackson', supervises: 3 }
+		], 'example 2');
+	});
+
+	QUnit.test('Mangler.extract', function(assert) {
+		assert.expect(7);
+
+		var data = {
+			mobile_os: [
+				{ id: "001", name: "Android" },
+				{ id: "002", name: "iOS" }
+			],
+			desktop_os: [
+				{ id: "003", name: "Windows" },
+				{ id: "004", name: "Linux", sub_os: [
+					{ id: "005", name: "CentOS" },
+					{ id: "006", name: "Ubuntu" }
+				]}
+			]
+		};
+
+		assert.deepEqual(Mangler.extract(data, 'mobile_os'), [
+			{ id: "001", name: "Android" },
+			{ id: "002", name: "iOS" }
+		], 'example 1');
+
+		assert.deepEqual(Mangler.extract(data, 'name'), ["Android", "iOS", "Windows", "Linux", "CentOS", "Ubuntu"], 'example 2');
+		assert.deepEqual(Mangler.extract(data, 'mobile_os[].name'), ["Android", "iOS"], 'example 3');
+		assert.deepEqual(Mangler.extract(data, 'desktop_os[1].sub_os[].name'), ["CentOS", "Ubuntu"], 'example 4');
+		assert.deepEqual(Mangler.extract(data, 'desktop_os.*.name'), ["Windows", "Linux", "CentOS", "Ubuntu"], 'example 5');
+
+		assert.deepEqual(Mangler.extract(data, '?_os'), [
+			{ id: "001", name: "Android" },
+			{ id: "002", name: "iOS" },
+			{ id: "003", name: "Windows" },
+			{ id: "004", name: "Linux", sub_os: [
+				{ id: "005", name: "CentOS" },
+				{ id: "006", name: "Ubuntu" }
+			]}
+		], 'example 6');
+
+		assert.deepEqual(Mangler.extract(data, '?_os', { drilldown: true }), [
+			{ id: "001", name: "Android" },
+			{ id: "002", name: "iOS" },
+			{ id: "003", name: "Windows" },
+			{ id: "004", name: "Linux", sub_os: [
+				{ id: "005", name: "CentOS" },
+				{ id: "006", name: "Ubuntu" }
+			]},
+			{ id: "005", name: "CentOS" },
+			{ id: "006", name: "Ubuntu" }
+		], 'example 7');
+	});
+
+	QUnit.test('Mangler.filter', function(assert) {
+		assert.expect(8);
+
+		var o1, o2;
+
+		assert.deepEqual(o1 = Mangler.filter(o2 = [1, 2, 3]), [], 'array: no argument, clear');
+		assert.ok(o1 === o2, 'reference check');
+		assert.deepEqual(o1 = Mangler.filter(o2 = [1, 2, 3], { $gte: 2 }), [2, 3], 'array: filter');
+		assert.ok(o1 === o2, 'reference check');
+		assert.deepEqual(o1 = Mangler.filter(o2 = { a: 1, b: 2, c: 3 }), {}, 'object: no argument, clear');
+		assert.ok(o1 === o2, 'reference check');
+		assert.deepEqual(o1 = Mangler.filter(o2 = { a: 1, b: 2, c: 3 }, { $gte: 2 }), { b: 2, c: 3 }, 'object: filter');
+		assert.ok(o1 === o2, 'reference check');
+	});
+
+	QUnit.test('Mangler.find', function(assert) {
+		assert.expect(4);
+
+		var a = [
+			{ type: 'fruit', name: 'apple', price: 1 },
+			{ type: 'vegetable', name: 'carrot', price: 2 },
+			{ type: 'fruit', name: 'cherry', price: 3 },
+			{ type: 'fruit', name: 'orange', price: 4 },
+			{ type: 'vegetable', name: 'peas', price: 5 }
+		];
+
+		assert.deepEqual(Mangler.find(a), [], 'no condition, no results');
+		assert.deepEqual(Mangler.find(a, {}), a, 'empty condition, return all');
+		assert.deepEqual(Mangler.find(a, { price: 3 }), [a[2]], 'one result');
+		assert.deepEqual(Mangler.find(a, { type: 'fruit' }), [a[0], a[2], a[3]], 'multiple results');
+	});
+
+	QUnit.test('Mangler.findOne', function(assert) {
+		assert.expect(4);
+
+		assert.strictEqual(Mangler.findOne(['A', 'B', 'C']), 'A', 'string array');
+		assert.strictEqual(Mangler.findOne(['A', 'B', 'C'], /B/), 'B', 'string array with filter');
+
+		var o = [
+			{ id: 0, val: 4 },
+			{ id: 1, val: 5 },
+			{ id: 2, val: 6 }
+		];
+
+		assert.deepEqual(Mangler.findOne(o, { val: { $gte: 5 } }), { id: 1, val: 5 }, 'object array with cond');
+		assert.deepEqual(Mangler.findOne(Mangler.index(o, 'id'), { val: { $gte: 5 } }), { id: 1, val: 5 }, 'iterate object properties with filter');
+	});
 
 	QUnit.test('Mangler.first', function(assert) {
 		assert.expect(4);
@@ -629,14 +845,264 @@
 		}, 'force source conversion');
 	});
 
-	// TODO: get
+	QUnit.test('Mangler.get', function(assert) {
+		assert.expect(5);
 
-	// TODO: getPath
+		var o = {
+			a: { b: 1 },
+			'a.b': 2,
+			c: 3
+		};
 
-	// TODO: merge
+		assert.strictEqual(Mangler.get([1, 2, 3], 1), 2, 'get array element');
+		assert.strictEqual(Mangler.get(Mangler([1, 2, 3]), 1), 2, 'Mangler object item');
+		assert.strictEqual(Mangler.get(o, 'c'), 3, 'object property');
+		assert.strictEqual(Mangler.get(o, 'a.b'), 2, 'object property with dot');
+		assert.deepEqual(Mangler.get(o, 'a'), { b: 1 }, 'get object');
+	});
 
-	// TODO: aggregate
+	QUnit.test('Mangler.getPath', function(assert) {
+		assert.expect(7);
+
+		var o = {
+			a: { b: 1 },
+			'a.b': 2,
+			c: 3,
+			d: { e: [4, 5, 6] }
+		};
+
+		assert.ok(typeof Mangler.getPath([1, 2, 3], 1) === 'undefined', 'non-string path');
+		assert.strictEqual(Mangler.getPath([1, 2, 3], '[1]'), 2, 'get array element');
+		assert.strictEqual(Mangler.getPath(Mangler([1, 2, 3]), '1'), 2, 'Mangler object item');
+		assert.strictEqual(Mangler.getPath(o, 'c'), 3, 'object property');
+		assert.strictEqual(Mangler.getPath(o, 'a.b'), 1, 'object property path');
+		assert.deepEqual(Mangler.getPath(o, 'a'), { b: 1 }, 'get object');
+		assert.deepEqual(Mangler.getPath(o, 'd.e[1]'), 5, 'path test');
+	});
+
+	QUnit.test('Mangler.merge', function(assert) {
+		assert.expect(11);
+
+		var o1, o2;
+
+		assert.deepEqual(o2 = Mangler.merge(o1 = { a: 1 }, { b: 2 }), { a: 1, b: 2 }, 'merge two objects');
+		assert.ok(o1 === o2, 'reference check');
+		assert.deepEqual(o2 = Mangler.merge(o1 = { a: 1 }, [{ b: 2 }, { c: 3 }]), { a: 1, b: 2, c: 3 }, 'merge array into object');
+		assert.ok(o1 === o2, 'reference check');
+		assert.deepEqual(o2 = Mangler.merge([o1 = { a: 1 }, { b: 2 }], [{ c: 3 }, { d: 4 }]), [{ a: 1, c: 3 }, { b: 2, d: 4 }], 'merge two arrays');
+		assert.ok(o1 === o2[0], 'reference check');
+		assert.deepEqual(o2 = Mangler.merge([o1 = { a: 1 }, { b: 2 }], { c: 3 }), [{ a: 1, c: 3 }, { b: 2, c: 3 }], 'merge object into array');
+		assert.ok(o1 === o2[0], 'reference check');
+		assert.strictEqual(Mangler.merge('A'), 'A', 'invalid argument');
+		assert.deepEqual(Mangler.merge({}, null), {}, 'invalid argument');
+		assert.strictEqual(typeof Mangler.merge(), 'undefined', 'no arguments');
+	});
+
+	QUnit.test('Mangler.aggregate', function(assert) {
+		assert.expect(17);
+
+		var o = { a: 1, b: 2, c: 3 };
+		var a = [2, 3, 4];
+
+		assert.strictEqual(Mangler.aggregate(a, 'sum'), 9, 'built in: sum');
+		assert.strictEqual(Mangler.aggregate(a, 'mul'), 24, 'built in: mul');
+		assert.strictEqual(Mangler.aggregate(a, 'avg'), 3, 'built in: avg');
+		assert.strictEqual(Mangler.aggregate(a, 'cnt'), 3, 'built in: cnt');
+		assert.strictEqual(Mangler.aggregate(a, 'min'), 2, 'built in: min');
+		assert.strictEqual(Mangler.aggregate(a, 'max'), 4, 'built in: max');
+		assert.deepEqual(Mangler.aggregate(o, 'array'), [1, 2, 3], 'built in: array');
+		assert.strictEqual(Mangler.aggregate(a, '+'), 9, 'built in: +');
+		assert.strictEqual(Mangler.aggregate(a, '*'), 24, 'built in: *');
+		assert.strictEqual(Mangler.aggregate(a, '<'), 2, 'built in: <');
+		assert.strictEqual(Mangler.aggregate(a, '>'), 4, 'built in: >');
+		assert.deepEqual(Mangler.aggregate(o, '[]'), [1, 2, 3], 'built in: []');
+		assert.strictEqual(Mangler.aggregate(a, 'add'), 9, 'built in: add');
+		assert.strictEqual(Mangler.aggregate(a, 'count'), 3, 'built in: count');
+
+		assert.strictEqual(Mangler.aggregate([3, 2, 1, 0], function(k, v, a) {
+			if(a.count == 1) a.result = '';
+			a.result += v;
+		}, {
+			value: function(v) {
+				return Math.pow(2, v);
+			}
+		}), '8421', 'custom with value function');
+
+		a = [
+			{ type: 'fruit', name: 'apple', price: 1 },
+			{ type: 'vegetable', name: 'carrot', price: 2 },
+			{ type: 'fruit', name: 'cherry', price: 3 },
+			{ type: 'fruit', name: 'orange', price: 4 },
+			{ type: 'vegetable', name: 'peas', price: 5 }
+		];
+
+		assert.deepEqual(Mangler.aggregate(a, '+', {
+			value: 'price',
+			group: 'type'
+		}), {
+			fruit: 8,
+			vegetable: 7
+		}, 'custom with value and group path');
+
+		assert.deepEqual(Mangler.aggregate(a, '+', {
+			value: 'price',
+			group: function(k, v) {
+				return v.type.toUpperCase();
+			}
+		}), {
+			FRUIT: 8,
+			VEGETABLE: 7
+		}, 'custom with value path and group function');
+	});
+
+	// Most instance methods need only a short test, as they're simply calling one of the static methods
+	// on the Mangler object's own items collection.
 
 	QUnit.module('Instance');
+
+	QUnit.test('.add', function(assert) {
+		assert.expect(4);
+
+		var m = Mangler();
+
+		assert.deepEqual(m.add(1).items, [1], 'add single item');
+		assert.deepEqual(m.add([2, 3]).items, [1, 2, 3], 'add multiple items');
+		assert.deepEqual(m.add([]).items, [1, 2, 3], 'add nothing');
+		assert.deepEqual(m.add().items, [1, 2, 3], 'add nothing');
+	});
+
+	QUnit.test('.aggregate', function(assert) {
+		assert.strictEqual(Mangler([1, 2, 3]).aggregate('+'), 6, 'passed');
+	});
+
+	QUnit.test('.clear', function(assert) {
+		assert.deepEqual(Mangler([1, 2, 3]).clear().items, [], 'passed');
+	});
+
+	QUnit.test('.clone', function(assert) {
+		assert.expect(2);
+
+		var m1 = Mangler([{ a: 1 }]);
+		var m2 = m1.clone();
+
+		assert.deepEqual(m1.items, m2.items, 'same contents');
+		assert.notStrictEqual(m1.items[0], m2.items[0], 'reference check');
+	});
+
+	QUnit.test('.copy', function(assert) {
+		assert.expect(2);
+
+		var m1 = Mangler([{ a: 1 }]);
+		var m2 = m1.copy();
+
+		assert.deepEqual(m1.items, m2.items, 'same contents');
+		assert.strictEqual(m1.items[0], m2.items[0], 'reference check');
+	});
+
+	QUnit.test('.deflate', function(assert) {
+		var m = Mangler([{ a: { b: 1 } }, { c: { d: 2 } }]).deflate();
+		assert.deepEqual(m.items, [{ a_b: 1 }, { c_d: 2 }], 'passed');
+	});
+
+	QUnit.test('.each', function(assert) {
+		var result = '';
+		Mangler(['A', 'B', 'C']).each(function(k, v) { result += v });
+		assert.strictEqual(result, 'ABC', 'passed');
+	});
+
+	QUnit.test('.explore', function(assert) {
+		var result = '';
+		Mangler([{ a: 'A' }, { b: 'B' }, { c: 'C' }]).explore(function(k, v, path) {
+			if(typeof v === 'string') result += path + v;
+		});
+		assert.strictEqual(result, '[0]A[1]B[2]C', 'passed');
+	});
+
+	QUnit.test('.filter', function(assert) {
+		assert.deepEqual(Mangler([1, 2, 3]).filter({ $ne: 2 }).items, [1, 3], 'passed');
+	});
+
+	QUnit.test('.find', function(assert) {
+		assert.deepEqual(Mangler([1, 2, 3]).find({ $lt: 3 }), [1, 2], 'passed');
+	});
+
+	QUnit.test('.findOne', function(assert) {
+		assert.strictEqual(Mangler([1, 2, 3]).findOne({ $lt: 3 }), 1, 'passed');
+	});
+
+	QUnit.test('.first', function(assert) {
+		assert.strictEqual(Mangler([1, 2, 3]).first({ $lt: 3 }), 1, 'passed');
+	});
+
+	QUnit.test('.get', function(assert) {
+		assert.strictEqual(Mangler([1, 2, 3]).get(1), 2, 'passed');
+	});
+
+	QUnit.test('.index', function(assert) {
+		var data = [
+			{ id: 'a' },
+			{ id: 'b' },
+			{ id: 'c' }
+		];
+
+		assert.deepEqual(Mangler(data).index('id'), {
+			a: { id: 'a' },
+			b: { id: 'b' },
+			c: { id: 'c' }
+		}, 'passed');
+	});
+
+	QUnit.test('.inflate', function(assert) {
+		var m = Mangler([{ a_b: 1 }, { c_d: 2 }]).inflate();
+		assert.deepEqual(m.items, [{ a: { b: 1 } }, { c: { d: 2 } }], 'passed');
+	});
+
+	QUnit.test('.last', function(assert) {
+		assert.strictEqual(Mangler([1, 2, 3]).last({ $lt: 3 }), 2, 'passed');
+	});
+
+	QUnit.test('.limit', function(assert) {
+		assert.expect(3);
+
+		var a = [1, 2, 3, 4];
+
+		assert.deepEqual(Mangler(a).limit(0).items, a, 'unlimited');
+		assert.deepEqual(Mangler(a).limit(2).items, [1, 2], 'passed');
+		assert.deepEqual(Mangler(a).limit(5).items, a, 'no change');
+	});
+
+	QUnit.test('.push', function(assert) {
+		assert.expect(4);
+
+		var m = Mangler();
+
+		assert.deepEqual(m.push(1).items, [1], 'push single item');
+		assert.deepEqual(m.push([2, 3]).items, [1, [2, 3]], 'push array');
+		assert.deepEqual(m.push([]).items, [1, [2, 3], []], 'push empty array');
+		assert.deepEqual(m.push().items, [1, [2, 3], []], 'push nothing');
+	});
+
+	QUnit.test('.remove', function(assert) {
+		assert.expect(8);
+
+		var m = Mangler(['A', 'B', 'C']);
+
+		assert.strictEqual(m.remove('B'), true, 'passed');
+		assert.deepEqual(m.items, ['A', 'C'], 'passed');
+		assert.strictEqual(m.remove('D'), false, 'passed');
+		assert.deepEqual(m.items, ['A', 'C'], 'passed');
+		assert.strictEqual(m.remove('A'), true, 'passed');
+		assert.deepEqual(m.items, ['C'], 'passed');
+		assert.strictEqual(m.remove('C'), true, 'passed');
+		assert.deepEqual(m.items, [], 'passed');
+	});
+
+	QUnit.test('.rename', function(assert) {
+		assert.deepEqual(Mangler({ a: 1 }).rename({ a: 'b' }).items, [{ b: 1 }], 'passed');
+	});
+
+	QUnit.test('.transform', function(assert) {
+		assert.deepEqual(Mangler({ one_two: 1 }).transform({ to: 'title' }).items, [{ OneTwo: 1 }], 'passed');
+	});
 
 })(this);
