@@ -13,7 +13,7 @@
 
 	QUnit.module('Utility');
 
-	QUnit.test('Mangler.registerType, Mangler.mergeType', function(assert) {
+	QUnit.test('Mangler.registerType, Mangler.mergeType, Mangler.removeType', function(assert) {
 		assert.expect(7);
 
 		function MyObject() { }
@@ -47,7 +47,7 @@
 		assert.strictEqual(result, 'ABC', 'iterator merged, ok');
 		assert.strictEqual(Mangler.get(o, 'a'), 1, 'get is still registered');
 
-		Mangler.registerType(MyObject, {});
+		Mangler.removeType(MyObject);
 
 		result = '';
 		Mangler.each(o, function(k, v) { result += v; });

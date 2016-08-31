@@ -206,6 +206,14 @@ var Mangler = (function(global) {
 			}
 		},
 
+		removeType: function(obj) {
+			var index = resolveType(obj, false);
+			if(index !== -1) {
+				constructors.splice(index, 1);
+				handlers.splice(index, 1);
+			}
+		},
+
 		compareType: function(a, b) {
 			if(a === b) return true;
 			if(a === null || b === null) return false;
