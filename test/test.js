@@ -578,7 +578,7 @@
 	});
 
 	QUnit.test('Mangler.extract', function(assert) {
-		assert.expect(7);
+		assert.expect(8);
 
 		var data = {
 			mobile_os: [
@@ -625,6 +625,20 @@
 			{ id: "005", name: "CentOS" },
 			{ id: "006", name: "Ubuntu" }
 		], 'example 7');
+
+		data = {
+			manager: { name: 'John' },
+			employees: [
+				{ name: 'Fred' },
+				{ name: 'Bill' }
+			]
+		};
+
+		assert.deepEqual(Mangler.extract(data, 'manager|employees', { key: true, prop: true }), [
+			{ name: 'John', key: 'manager', prop: 'manager' },
+			{ name: 'Fred', key: 0, prop: 'employees' },
+			{ name: 'Bill', key: 1, prop: 'employees' }
+		], 'example 8');
 	});
 
 	QUnit.test('Mangler.filter', function(assert) {

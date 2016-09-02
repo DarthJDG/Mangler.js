@@ -572,12 +572,20 @@ var Mangler = (function(global) {
 
 		explore: function(obj, callback, state) {
 			if(typeof callback === 'function') {
-				state = fn.merge({}, state);
-				if(typeof state.$path !== 'string') state.$path = '';
+				state = fn.merge({
+					$path: '',
+					$prop: ''
+				}, state);
+
 				state.$parent = obj;
 				state.$parentPath = state.$path;
 				fn.each(obj, function(k, v) {
-					state.$path = state.$parentPath + ((typeof k !== 'string') ? '[' + k + ']' : '.' + k);
+					if(typeof k === 'string') {
+						state.$path = state.$parentPath + '.' + k;
+						state.$prop = k;
+					} else {
+						state.$path = state.$parentPath + '[' + k + ']';
+					}
 					if(callback(k, v, state) !== false && fn.getIterator(v)) {
 						fn.explore(v, callback, state);
 					}
@@ -618,19 +626,13 @@ var Mangler = (function(global) {
 									item = v[i];
 									if(fn.isObject(item)) {
 										if(op.key !== false) item[op.key] = i;
-										if(op.prop !== false) {
-											m = state.$path.match(/\.([^\.\[]*)[0-9\[\]]*$/);
-											if(m !== null) item[op.prop] = m[1];
-										}
+										if(op.prop !== false) item[op.prop] = state.$prop;
 									}
 								}
 							}
 						} else if(fn.isObject(v)) {
 							if(op.key !== false) v[op.key] = k;
-							if(op.prop !== false) {
-								m = state.$path.match(/\.([^\.\[]*)[0-9\[\]]*$/);
-								if(m !== null) v[op.prop] = m[1];
-							}
+							if(op.prop !== false) v[op.prop] = state.$prop;
 						}
 					}
 
