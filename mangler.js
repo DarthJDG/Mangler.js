@@ -1098,6 +1098,10 @@ var Mangler = (function(global) {
 			return this;
 		},
 
+		test: function(cond) {
+			return fn.test(this.items, cond);
+		},
+
 		transform: function(options) {
 			fn.transform(this.items, options);
 			return this;

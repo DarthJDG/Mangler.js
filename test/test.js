@@ -1131,6 +1131,15 @@
 		assert.deepEqual(Mangler({ a: 1 }).rename({ a: 'b' }).items, [{ b: 1 }], 'passed');
 	});
 
+	QUnit.test('.test', function(assert) {
+		assert.expect(2);
+
+		var a = [{ a: 1 }, { b: 2 }, { c: 3 }];
+
+		assert.ok(Mangler(a).test({ b: 2 }), 'true');
+		assert.ok(!Mangler(a).test({ b: 3 }), 'false');
+	});
+
 	QUnit.test('.transform', function(assert) {
 		assert.deepEqual(Mangler({ one_two: 1 }).transform({ to: 'title' }).items, [{ OneTwo: 1 }], 'passed');
 	});
