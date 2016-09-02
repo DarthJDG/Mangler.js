@@ -510,23 +510,17 @@
 			{ children: [{}, {}] }
 		];
 
-		// Optional prefix to the callback's path parameter
-		var rootPath = '';
-
-		// State object passed at root level
-		var initialState = { depth: 0 };
-
-		Mangler.explore(data, function(key, value, path, state) {
+		Mangler.explore(data, function(key, value, state) {
 		if(Mangler.isObject(value)) {
-			if(path !== state.path) {
+			if(state.$parentPath !== state.path) {
 				// There was a change in parent path, increase depth
 				// It makes sure we don't increase depth for every sibling
-				state.path = path;
+				state.path = state.$parentPath;
 				state.depth++;
 			}
 				value.depth = state.depth;
 			}
-		}, rootPath, initialState);
+		}, { depth: 0 });
 
 		assert.deepEqual(data, [
 			{ depth: 1, child: { depth: 2 } },
@@ -561,7 +555,7 @@
 			]
 		};
 
-		Mangler.explore(data, function(k, v, path, state) {
+		Mangler.explore(data, function(k, v, state) {
 			if(v.manager) {
 				// This is a company, add company name to manager
 				v.manager.company = v.name;
@@ -575,7 +569,7 @@
 				// It has a name and not the manager, must be another employee
 				state.manager.supervises += 1;
 			}
-		}, '', {});
+		});
 
 		assert.deepEqual(Mangler.extract(data, 'manager'), [
 			{ company: 'Test Company', name: 'Mr Smith', supervises: 4 },
@@ -1034,10 +1028,10 @@
 
 	QUnit.test('.explore', function(assert) {
 		var result = '';
-		Mangler([{ a: 'A' }, { b: 'B' }, { c: 'C' }]).explore(function(k, v, path) {
-			if(typeof v === 'string') result += path + v;
+		Mangler([{ a: 'A' }, { b: 'B' }, { c: 'C' }]).explore(function(k, v, state) {
+			if(typeof v === 'string') result += state.$path + v;
 		});
-		assert.strictEqual(result, '[0]A[1]B[2]C', 'passed');
+		assert.strictEqual(result, '[0].aA[1].bB[2].cC', 'passed');
 	});
 
 	QUnit.test('.filter', function(assert) {

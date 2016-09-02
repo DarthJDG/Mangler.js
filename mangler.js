@@ -570,13 +570,16 @@ var Mangler = (function(global) {
 			}
 		},
 
-		explore: function(obj, callback, path, state) {
+		explore: function(obj, callback, state) {
 			if(typeof callback === 'function') {
-				if(typeof path !== 'string') path = '';
-				if(typeof state !== 'undefined') state = fn.merge({}, state);
+				state = fn.merge({}, state);
+				if(typeof state.$path !== 'string') state.$path = '';
+				state.$parent = obj;
+				state.$parentPath = state.$path;
 				fn.each(obj, function(k, v) {
-					if(callback(k, v, path, state) !== false && fn.getIterator(v)) {
-						fn.explore(v, callback, path + ((typeof k !== 'string') ? '[' + k + ']' : '.' + k), state);
+					state.$path = state.$parentPath + ((typeof k !== 'string') ? '[' + k + ']' : '.' + k);
+					if(callback(k, v, state) !== false && fn.getIterator(v)) {
+						fn.explore(v, callback, state);
 					}
 				});
 			}
@@ -603,11 +606,10 @@ var Mangler = (function(global) {
 			op.key = op.key === true ? 'key' : op.key;
 			op.prop = op.prop === true ? 'prop' : op.prop;
 
-			fn.explore(obj, function(k, v, path) {
+			fn.explore(obj, function(k, v, state) {
 				var item, i, m;
 
-				path = path + (typeof k !== 'string' ? '[' + k + ']' : '.' + k);
-				if(filter.test(path) && fn.test(v, op.test)) {
+				if(filter.test(state.$path) && fn.test(v, op.test)) {
 					// Add keys and props to objects
 					if(op.key !== false || op.prop !== false) {
 						if(fn.isArray(v)) {
@@ -617,7 +619,7 @@ var Mangler = (function(global) {
 									if(fn.isObject(item)) {
 										if(op.key !== false) item[op.key] = i;
 										if(op.prop !== false) {
-											m = path.match(/\.([^\.\[]*)[0-9\[\]]*$/);
+											m = state.$path.match(/\.([^\.\[]*)[0-9\[\]]*$/);
 											if(m !== null) item[op.prop] = m[1];
 										}
 									}
@@ -626,7 +628,7 @@ var Mangler = (function(global) {
 						} else if(fn.isObject(v)) {
 							if(op.key !== false) v[op.key] = k;
 							if(op.prop !== false) {
-								m = path.match(/\.([^\.\[]*)[0-9\[\]]*$/);
+								m = state.$path.match(/\.([^\.\[]*)[0-9\[\]]*$/);
 								if(m !== null) v[op.prop] = m[1];
 							}
 						}
@@ -642,7 +644,7 @@ var Mangler = (function(global) {
 					// Drill down into a matched object?
 					if(!op.drilldown) return false;
 				}
-			}, '', {});
+			});
 			return ret;
 		},
 
@@ -1021,8 +1023,8 @@ var Mangler = (function(global) {
 			return this;
 		},
 
-		explore: function(callback, path, state) {
-			fn.explore(this.items, callback, path, state);
+		explore: function(callback, state) {
+			fn.explore(this.items, callback, state);
 			return this;
 		},
 
