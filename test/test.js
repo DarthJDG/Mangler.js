@@ -234,6 +234,23 @@
 		assert.notStrictEqual(o1.items[0].one, o2.items[0].one, 'passed reference test');
 	});
 
+	QUnit.test('Mangler.tokenize', function(assert) {
+		assert.expect(8);
+		var result;
+
+		// Auto detection test
+		assert.strictEqual(Mangler.tokenize('one_two_three').join(','), 'one,two,three', 'detect snake');
+		assert.strictEqual(Mangler.tokenize('one.two.three').join(','), 'one,two,three', 'detect dot');
+		assert.strictEqual(Mangler.tokenize('oneTwoTHREE123').join(','), 'one,Two,THREE,123', 'detect camel 1');
+		assert.strictEqual(Mangler.tokenize('oneTwoTHREEFour').join(','), 'one,Two,THREE,Four', 'detect camel 2');
+		assert.strictEqual(Mangler.tokenize('OneTwoThree').join(','), 'One,Two,Three', 'detect title');
+
+		// Forced source
+		assert.strictEqual(Mangler.tokenize('one.two_three#four', '#').join(','), 'one.two_three,four', 'forced delimiter');
+		assert.strictEqual(Mangler.tokenize('oneTwo.threeFour', 'camel').join(','), 'one,Two.three,Four', 'forced camel/title');
+		assert.strictEqual(Mangler.tokenize('test.one[12].a', 'path').join(','), 'test,one,12,a', 'forced path');
+	});
+
 	QUnit.module('Static');
 
 	QUnit.test('Mangler.test', function(assert) {
@@ -456,23 +473,6 @@
 
 		result = Mangler.transform({ one_two: 1, three_four: 2 }, { to: 'upper#', ignore: ['one_two'] });
 		assert.deepEqual(result, { one_two: 1, 'THREE#FOUR': 2 }, 'ignore in object');
-	});
-
-	QUnit.test('Mangler.tokenize', function(assert) {
-		assert.expect(8);
-		var result;
-
-		// Auto detection test
-		assert.strictEqual(Mangler.tokenize('one_two_three').join(','), 'one,two,three', 'detect snake');
-		assert.strictEqual(Mangler.tokenize('one.two.three').join(','), 'one,two,three', 'detect dot');
-		assert.strictEqual(Mangler.tokenize('oneTwoTHREE123').join(','), 'one,Two,THREE,123', 'detect camel 1');
-		assert.strictEqual(Mangler.tokenize('oneTwoTHREEFour').join(','), 'one,Two,THREE,Four', 'detect camel 2');
-		assert.strictEqual(Mangler.tokenize('OneTwoThree').join(','), 'One,Two,Three', 'detect title');
-
-		// Forced source
-		assert.strictEqual(Mangler.tokenize('one.two_three#four', '#').join(','), 'one.two_three,four', 'forced delimiter');
-		assert.strictEqual(Mangler.tokenize('oneTwo.threeFour', 'camel').join(','), 'one,Two.three,Four', 'forced camel/title');
-		assert.strictEqual(Mangler.tokenize('test.one[12].a', 'path').join(','), 'test,one,12,a', 'forced path');
 	});
 
 	QUnit.test('Mangler.each', function(assert) {
