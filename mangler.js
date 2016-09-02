@@ -700,7 +700,7 @@ var Mangler = (function(global) {
 				} else if(isArray) {
 					if(!delimiter) delimiter = '|';
 					key = '';
-					Mangler.each(generator, function(i, field) {
+					fn.each(generator, function(i, field) {
 						if(i > 0) key += delimiter;
 						key += fn.getPath(v, field);
 					});
