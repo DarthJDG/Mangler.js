@@ -985,14 +985,17 @@ var Mangler = (function(global) {
 
 		constructor: ManglerObject,
 
-		add: function(item) {
-			if(typeof item !== 'undefined') {
-				if(fn.isArray(item)) {
-					global.Array.prototype.push.apply(this.items, item);
-				} else {
-					this.items.push(item);
+		add: function() {
+			var items = this.items;
+			fn.each(arguments, function(k, item) {
+				if(typeof item !== 'undefined') {
+					if(fn.isArray(item)) {
+						global.Array.prototype.push.apply(items, item);
+					} else {
+						items.push(item);
+					}
 				}
-			}
+			});
 			return this;
 		},
 
@@ -1082,10 +1085,13 @@ var Mangler = (function(global) {
 			return this;
 		},
 
-		push: function(item) {
-			if(typeof item !== 'undefined') {
-				this.items.push(item);
-			}
+		push: function() {
+			var items = this.items;
+			fn.each(arguments, function(k, item) {
+				if(typeof item !== 'undefined') {
+					items.push(item);
+				}
+			});
 			return this;
 		},
 

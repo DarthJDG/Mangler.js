@@ -991,7 +991,7 @@
 	QUnit.module('Instance');
 
 	QUnit.test('.add', function(assert) {
-		assert.expect(4);
+		assert.expect(5);
 
 		var m = Mangler();
 
@@ -999,6 +999,7 @@
 		assert.deepEqual(m.add([2, 3]).items, [1, 2, 3], 'add multiple items');
 		assert.deepEqual(m.add([]).items, [1, 2, 3], 'add nothing');
 		assert.deepEqual(m.add().items, [1, 2, 3], 'add nothing');
+		assert.deepEqual(m.add([4, 5], 6).items, [1, 2, 3, 4, 5, 6], 'multiple arguments');
 	});
 
 	QUnit.test('.aggregate', function(assert) {
@@ -1109,7 +1110,7 @@
 	});
 
 	QUnit.test('.push', function(assert) {
-		assert.expect(4);
+		assert.expect(5);
 
 		var m = Mangler();
 
@@ -1117,6 +1118,7 @@
 		assert.deepEqual(m.push([2, 3]).items, [1, [2, 3]], 'push array');
 		assert.deepEqual(m.push([]).items, [1, [2, 3], []], 'push empty array');
 		assert.deepEqual(m.push().items, [1, [2, 3], []], 'push nothing');
+		assert.deepEqual(m.push([4, 5], 6).items, [1, [2, 3], [], [4, 5], 6], 'multiple arguments');
 	});
 
 	QUnit.test('.remove', function(assert) {
