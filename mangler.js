@@ -1077,6 +1077,11 @@ var Mangler = (function(global) {
 			return this;
 		},
 
+		merge: function(src) {
+			this.items = fn.merge(this.items, src);
+			return this;
+		},
+
 		push: function(item) {
 			if(typeof item !== 'undefined') {
 				this.items.push(item);

@@ -1101,6 +1101,13 @@
 		assert.deepEqual(Mangler(a).limit(5).items, a, 'no change');
 	});
 
+	QUnit.test('.merge', function(assert) {
+		assert.deepEqual(Mangler([{ a: 1 }, { b: 2 }]).merge({ c: 3 }).items, [
+			{ a: 1, c: 3 },
+			{ b: 2, c: 3 }
+		], 'passed');
+	});
+
 	QUnit.test('.push', function(assert) {
 		assert.expect(4);
 
