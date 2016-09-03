@@ -180,6 +180,35 @@
 		bad(Mangler(1), 'mangler object');
 	});
 
+	QUnit.test('Mangler.isMangler', function(assert) {
+		assert.expect(16);
+
+		function good(value, message) {
+			assert.ok(Mangler.isMangler(value), message);
+		}
+
+		function bad(value, message) {
+			assert.ok(!Mangler.isMangler(value), message);
+		}
+
+		bad(undefined, 'undefined');
+		bad(null, 'null');
+		bad({}, 'empty object literal');
+		bad({ one: 1 }, 'object literal');
+		bad([], 'empty array literal');
+		bad([1, 2, 3], 'array literal');
+		bad(new Date(), 'date object');
+		bad('', 'empty string');
+		bad('asd', 'string');
+		bad(0, 'zero');
+		bad(12, 'integer');
+		bad(5.2, 'float');
+		bad(function(){}, 'function');
+		bad(/a/, 'regular expression');
+		good(Mangler(), 'empty mangler object');
+		good(Mangler(1), 'mangler object');
+	});
+
 	QUnit.test('Mangler.isEmpty', function(assert) {
 		assert.expect(16);
 

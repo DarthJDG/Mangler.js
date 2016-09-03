@@ -255,6 +255,11 @@ var Mangler = (function(global) {
 			return obj.constructor === global.Object;
 		},
 
+		isMangler: function(obj) {
+			if(obj === null || typeof obj !== 'object') return false;
+			return obj.constructor === ManglerObject;
+		},
+
 		isEmpty: function(obj) {
 			var ret, it;
 
