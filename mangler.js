@@ -436,7 +436,12 @@ var Mangler = (function(global) {
 
 			if(!fn.isObject(dict)) return obj;
 
-			if(fn.isArray(obj)) {
+			if(typeof obj === 'string') {
+
+				// Rename string
+				return dict[obj] || obj;
+
+			} else if(fn.isArray(obj)) {
 
 				// Rename array
 				for(i = 0; i < obj.length; i++) obj[i] = fn.rename(obj[i], dict);
@@ -453,10 +458,11 @@ var Mangler = (function(global) {
 				fn.merge(obj, o);
 				return obj;
 
-			} else if(typeof obj === 'string') {
+			} else if(fn.isMangler(obj)) {
 
-				// Rename string
-				return dict[obj] || obj;
+				// Rename mangler object
+				for(i = 0; i < obj.items.length; i++) obj.items[i] = fn.rename(obj.items[i], dict);
+				return obj;
 
 			} else {
 				// Return parameter as is
@@ -467,24 +473,7 @@ var Mangler = (function(global) {
 		transform: function(obj, options) {
 			var i, o, word, delim;
 
-			if(fn.isArray(obj)) {
-
-				// Transform array
-				for(i = 0; i < obj.length; i++) obj[i] = fn.transform(obj[i], options);
-				return obj;
-
-			} else if(fn.isObject(obj)) {
-
-				// Transform object
-				o = {};
-				fn.each(obj, function(prop, val) {
-					o[fn.transform(prop, options)] = val;
-					delete obj[prop];
-				});
-				fn.merge(obj, o);
-				return obj;
-
-			} else if(typeof obj === 'string') {
+			if(typeof obj === 'string') {
 
 				// Transform string
 				var op = fn.merge({
@@ -523,6 +512,29 @@ var Mangler = (function(global) {
 						// Default to snake_case
 						return obj.join('_');
 				}
+
+			} else if(fn.isArray(obj)) {
+
+				// Transform array
+				for(i = 0; i < obj.length; i++) obj[i] = fn.transform(obj[i], options);
+				return obj;
+
+			} else if(fn.isObject(obj)) {
+
+				// Transform object
+				o = {};
+				fn.each(obj, function(prop, val) {
+					o[fn.transform(prop, options)] = val;
+					delete obj[prop];
+				});
+				fn.merge(obj, o);
+				return obj;
+
+			} else if(fn.isMangler(obj)) {
+
+				// Transform mangler
+				for(i = 0; i < obj.items.length; i++) obj.items[i] = fn.transform(obj.items[i], options);
+				return obj;
 
 			} else {
 				// Return parameter as is
@@ -664,6 +676,10 @@ var Mangler = (function(global) {
 				fn.each(obj, function(k, v) {
 					if(!fn.test(v, cond)) delete obj[k];
 				});
+			} else if(fn.isMangler(obj)) {
+				var res = fn.find(obj, cond);
+				obj.items.length = 0;
+				global.Array.prototype.push.apply(obj.items, res);
 			}
 			return obj;
 		},
@@ -693,7 +709,7 @@ var Mangler = (function(global) {
 		},
 
 		index: function(obj, generator, delimiter) {
-			if(!fn.isArray(obj)) return null;
+			if(!fn.isArray(obj) && !fn.isMangler(obj)) return null;
 
 			var index = {},
 				isFunction = (typeof generator === 'function'),

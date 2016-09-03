@@ -445,7 +445,7 @@
 	});
 
 	QUnit.test('Mangler.rename', function(assert) {
-		assert.expect(7);
+		assert.expect(8);
 
 		var result, dict = {
 			'one': 'ONE',
@@ -465,6 +465,10 @@
 		result = Mangler.rename({ one: 1, two: 2, three: 3 }, dict);
 		assert.deepEqual(result, { ONE: 1, TWO: 2, three: 3 }, 'object');
 
+		// Mangler
+		result = Mangler.rename(Mangler(['one', 'two', 'three']), dict);
+		assert.deepEqual(result.items, ['ONE', 'TWO', 'three'], 'array');
+
 		// Other
 		var r = /a/;
 		assert.strictEqual(Mangler.rename(r, dict), r, 'other');
@@ -475,7 +479,7 @@
 	});
 
 	QUnit.test('Mangler.transform', function(assert) {
-		assert.expect(10);
+		assert.expect(11);
 		var result;
 
 		// Auto detection test
@@ -495,6 +499,10 @@
 		// Object
 		result = Mangler.transform({ one_two: 1, three_four: 2 }, { to: 'upper#' });
 		assert.deepEqual(result, { 'ONE#TWO': 1, 'THREE#FOUR': 2 }, 'object');
+
+		// Mangler
+		result = Mangler.transform(Mangler(['one_two', 'three_four']), { to: 'upper.' });
+		assert.deepEqual(result.items, ['ONE.TWO', 'THREE.FOUR'], 'array');
 
 		// Ignore
 		result = Mangler.transform(['one_two', 'three_four'], { to: 'upper.', ignore: ['one_two'] });
@@ -671,7 +679,7 @@
 	});
 
 	QUnit.test('Mangler.filter', function(assert) {
-		assert.expect(8);
+		assert.expect(12);
 
 		var o1, o2;
 
@@ -682,6 +690,13 @@
 		assert.deepEqual(o1 = Mangler.filter(o2 = { a: 1, b: 2, c: 3 }), {}, 'object: no argument, clear');
 		assert.ok(o1 === o2, 'reference check');
 		assert.deepEqual(o1 = Mangler.filter(o2 = { a: 1, b: 2, c: 3 }, { $gte: 2 }), { b: 2, c: 3 }, 'object: filter');
+		assert.ok(o1 === o2, 'reference check');
+
+		o1 = Mangler.filter(o2 = Mangler([1, 2, 3]))
+		assert.deepEqual(o1.items, [], 'mangler: no argument, clear');
+		assert.ok(o1 === o2, 'reference check');
+		o1 = Mangler.filter(o2 = Mangler([1, 2, 3]), { $gte: 2 })
+		assert.deepEqual(o1.items, [2, 3], 'mangler: filter');
 		assert.ok(o1 === o2, 'reference check');
 	});
 
@@ -735,7 +750,7 @@
 	});
 
 	QUnit.test('Mangler.index', function(assert) {
-		assert.expect(7);
+		assert.expect(8);
 
 		var o = [
 			{ id: 0, data: 'a' },
@@ -792,6 +807,12 @@
 			'3|4|5': { id: 1, data: 'b', deep: { arr: [3, 4, 5] } },
 			'4|5|6': { id: 2, data: 'c', deep: { arr: [4, 5, 6] } }
 		}, 'path array generator');
+
+		assert.deepEqual(Mangler.index(Mangler(o), ['deep.arr[0]', 'deep.arr[1]', 'deep.arr[2]']), {
+			'2|3|4': { id: 0, data: 'a', deep: { arr: [2, 3, 4] } },
+			'3|4|5': { id: 1, data: 'b', deep: { arr: [3, 4, 5] } },
+			'4|5|6': { id: 2, data: 'c', deep: { arr: [4, 5, 6] } }
+		}, 'indexing mangler object');
 	});
 
 	QUnit.test('Mangler.last', function(assert) {
