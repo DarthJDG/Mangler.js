@@ -1109,6 +1109,28 @@
 		assert.strictEqual(result, '[0].aA[1].bB[2].cC', 'passed');
 	});
 
+	QUnit.test('.extract', function(assert) {
+		assert.expect(2);
+
+		var data = {
+			manager: { name: 'John' },
+			employees: [
+				{ name: 'Fred' },
+				{ name: 'Bill' }
+			]
+		};
+
+		var m = Mangler(data);
+
+		assert.deepEqual(m.extract('manager|employees', { key: true, prop: true }), [
+			{ name: 'John', key: 'manager', prop: 'manager' },
+			{ name: 'Fred', key: 0, prop: 'employees' },
+			{ name: 'Bill', key: 1, prop: 'employees' }
+		], 'passed');
+
+		assert.strictEqual(m.items[0], data, 'original items preserved');
+	});
+
 	QUnit.test('.filter', function(assert) {
 		assert.deepEqual(Mangler([1, 2, 3]).filter({ $ne: 2 }).items, [1, 3], 'passed');
 	});

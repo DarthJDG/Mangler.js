@@ -1063,9 +1063,7 @@ var Mangler = (function(global) {
 		},
 
 		extract: function(filter, options) {
-			var res = fn.extract(this.items, filter, options);
-			this.clear().add(res);
-			return this;
+			return fn.extract(this.items, filter, options);
 		},
 
 		filter: function(cond) {
