@@ -36,7 +36,7 @@
 	QUnit.module('Utility');
 
 	QUnit.test('Mangler.registerType, Mangler.mergeType, Mangler.removeType', function(assert) {
-		assert.expect(7);
+		assert.expect(11);
 
 		function MyObject() { }
 
@@ -44,11 +44,11 @@
 
 		assert.strictEqual(typeof Mangler.get(o, 'a'), 'undefined', 'not registered, get fails');
 
-		Mangler.registerType(MyObject, {
+		assert.ok(Mangler.registerType(MyObject, {
 			get: function(obj, k) {
 				if(k === 'a') return 1;
 			}
-		});
+		}), 'registration ok');
 
 		assert.strictEqual(Mangler.get(o, 'a'), 1, 'registered, got value');
 
@@ -56,25 +56,27 @@
 		Mangler.each(o, function(k, v) { result += v; });
 		assert.strictEqual(result, '', 'no iterator yet, fail');
 
-		Mangler.mergeType(MyObject, {
+		assert.ok(Mangler.mergeType(MyObject, {
 			each: function(obj, callback) {
 				if(callback(0, 'A') === false) return;
 				if(callback(1, 'B') === false) return;
 				if(callback(2, 'C') === false) return;
 			}
-		});
+		}), 'merge ok');
 
 		result = '';
 		Mangler.each(o, function(k, v) { result += v; });
 		assert.strictEqual(result, 'ABC', 'iterator merged, ok');
 		assert.strictEqual(Mangler.get(o, 'a'), 1, 'get is still registered');
 
-		Mangler.removeType(MyObject);
+		assert.ok(Mangler.removeType(MyObject), 'remove ok');
 
 		result = '';
 		Mangler.each(o, function(k, v) { result += v; });
 		assert.strictEqual(result, '', 'unregistered');
 		assert.strictEqual(typeof Mangler.get(o, 'a'), 'undefined', 'unregistered');
+
+		assert.ok(!Mangler.removeType(MyObject), 'already removed');
 	});
 
 	QUnit.test('Mangler.compareType', function(assert) {

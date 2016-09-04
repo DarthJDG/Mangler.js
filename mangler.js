@@ -197,6 +197,7 @@ var Mangler = (function(global) {
 			if(index !== -1) {
 				resolveHandlers(fn.merge(handlers[index], handler));
 			}
+			return index !== -1;
 		},
 
 		registerType: function(obj, handler) {
@@ -204,6 +205,7 @@ var Mangler = (function(global) {
 			if(index !== -1) {
 				resolveHandlers(handlers[index] = handler);
 			}
+			return index !== -1;
 		},
 
 		removeType: function(obj) {
@@ -212,6 +214,7 @@ var Mangler = (function(global) {
 				constructors.splice(index, 1);
 				handlers.splice(index, 1);
 			}
+			return index !== -1;
 		},
 
 		compareType: function(a, b) {
