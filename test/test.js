@@ -283,7 +283,7 @@
 	QUnit.module('Static');
 
 	QUnit.test('Mangler.test', function(assert) {
-		assert.expect(165);
+		assert.expect(167);
 
 		function good(arg1, op, arg2) {
 			var cond = {};
@@ -442,6 +442,16 @@
 		// implicit $elemMatch
 		assert.ok(Mangler.test([{ a: 1 }, { a: 2 }], { a: 2 }), 'implicit $elemMatch pass');
 		assert.ok(!Mangler.test([{ a: 1 }, { a: 2 }], { a: 3 }), 'implicit $elemMatch fail');
+
+		// $aggregate operator
+		assert.ok(Mangler.test([1, 2], { $aggregate: ['avg', 1.5] }), '$aggregate: simple array');
+		assert.ok(Mangler.test({ a:
+			[
+				{ type: 'fruit', price: 4 },
+				{ type: 'fruit', price: 5 },
+				{ type: 'veg', price: 6 },
+			]
+		}, { a: { $aggregate: ['+', { value: 'price', group: 'type' }, { fruit: 9 }] } }), '$aggregate: object with grouping');
 	});
 
 	QUnit.test('Mangler.rename', function(assert) {

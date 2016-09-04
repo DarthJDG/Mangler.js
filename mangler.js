@@ -401,6 +401,14 @@ var Mangler = (function(global) {
 						res = (typeof v === 'function') ? v(obj) : false;
 						break;
 
+					case '$aggregate':
+						if(v.length == 2) {
+							res = fn.test(fn.aggregate(obj, v[0]), v[1]);
+						} else {
+							res = fn.test(fn.aggregate(obj, v[0], v[1]), v[2]);
+						}
+						break;
+
 					default:
 						res = fn.test(fn.getPath(obj, k), v);
 				}
