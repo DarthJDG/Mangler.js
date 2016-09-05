@@ -1087,7 +1087,7 @@ var Mangler = (function(global) {
 		},
 
 		get: function(i) {
-			return fn.get(this.items, i);
+			return this.items[i];
 		},
 
 		index: function(generator, delimiter) {
