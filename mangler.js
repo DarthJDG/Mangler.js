@@ -1127,11 +1127,8 @@ var Mangler = (function(global) {
 
 		remove: function(item) {
 			var i = this.items.indexOf(item);
-			if(i > -1) {
-				this.items.splice(i, 1);
-				return true;
-			}
-			return false;
+			if(i > -1) this.items.splice(i, 1);
+			return this;
 		},
 
 		rename: function(dict) {

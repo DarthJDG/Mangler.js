@@ -1206,18 +1206,14 @@
 	});
 
 	QUnit.test('.remove', function(assert) {
-		assert.expect(8);
+		assert.expect(4);
 
 		var m = Mangler(['A', 'B', 'C']);
 
-		assert.strictEqual(m.remove('B'), true, 'passed');
-		assert.deepEqual(m.items, ['A', 'C'], 'passed');
-		assert.strictEqual(m.remove('D'), false, 'passed');
-		assert.deepEqual(m.items, ['A', 'C'], 'passed');
-		assert.strictEqual(m.remove('A'), true, 'passed');
-		assert.deepEqual(m.items, ['C'], 'passed');
-		assert.strictEqual(m.remove('C'), true, 'passed');
-		assert.deepEqual(m.items, [], 'passed');
+		assert.deepEqual(m.remove('B').items, ['A', 'C'], 'passed');
+		assert.deepEqual(m.remove('D').items, ['A', 'C'], 'passed');
+		assert.deepEqual(m.remove('A').items, ['C'], 'passed');
+		assert.deepEqual(m.remove('C').items, [], 'passed');
 	});
 
 	QUnit.test('.rename', function(assert) {
