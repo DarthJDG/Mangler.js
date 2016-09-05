@@ -1103,6 +1103,29 @@
 		assert.strictEqual(result, 'ABC', 'passed');
 	});
 
+	QUnit.test('.end, .endAll', function(assert) {
+		assert.expect(13);
+
+		var m = Mangler([1,2,3,4,5]);
+		var m1 = m.find({ $lt: 5 });
+		var m2 = m1.find({ $gt: 1});
+		var m3 = m2.findOne({ $eq: 3 });
+
+		assert.notStrictEqual(m, m1, 'reference validation');
+		assert.notStrictEqual(m1, m2, 'reference validation');
+		assert.notStrictEqual(m2, m3, 'reference validation');
+		assert.deepEqual(m.items, [1,2,3,4,5], 'result validation');
+		assert.deepEqual(m1.items, [1,2,3,4], 'result validation');
+		assert.deepEqual(m2.items, [2,3,4], 'result validation');
+		assert.deepEqual(m3.items, [3], 'result validation');
+		assert.strictEqual(m3.end(), m2, 'end validation');
+		assert.strictEqual(m2.end(), m1, 'end validation');
+		assert.strictEqual(m1.end(), m, 'end validation');
+		assert.strictEqual(m.end(), m, 'end validation');
+		assert.strictEqual(m3.endAll(), m, 'endAll validation');
+		assert.strictEqual(m.endAll(), m, 'endAll validation');
+	});
+
 	QUnit.test('.explore', function(assert) {
 		var result = '';
 		Mangler([{ a: 'A' }, { b: 'B' }, { c: 'C' }]).explore(function(k, v, state) {
@@ -1112,7 +1135,7 @@
 	});
 
 	QUnit.test('.extract', function(assert) {
-		assert.expect(2);
+		assert.expect(4);
 
 		var data = {
 			manager: { name: 'John' },
@@ -1123,14 +1146,17 @@
 		};
 
 		var m = Mangler(data);
+		var m1 = m.extract('manager|employees', { key: true, prop: true });
 
-		assert.deepEqual(m.extract('manager|employees', { key: true, prop: true }), [
+		assert.deepEqual(m1.items, [
 			{ name: 'John', key: 'manager', prop: 'manager' },
 			{ name: 'Fred', key: 0, prop: 'employees' },
 			{ name: 'Bill', key: 1, prop: 'employees' }
 		], 'passed');
 
 		assert.strictEqual(m.items[0], data, 'original items preserved');
+		assert.notStrictEqual(m, m1, 'reference check');
+		assert.strictEqual(m1.end(), m, 'end check');
 	});
 
 	QUnit.test('.filter', function(assert) {
@@ -1138,11 +1164,23 @@
 	});
 
 	QUnit.test('.find', function(assert) {
-		assert.deepEqual(Mangler([1, 2, 3]).find({ $lt: 3 }), [1, 2], 'passed');
+		assert.expect(3);
+		var m = Mangler([1, 2, 3]);
+		var m1 = m.find({ $lt: 3 });
+
+		assert.deepEqual(m1.items, [1, 2], 'passed');
+		assert.notStrictEqual(m, m1, 'reference check');
+		assert.strictEqual(m1.end(), m, 'end check');
 	});
 
 	QUnit.test('.findOne', function(assert) {
-		assert.strictEqual(Mangler([1, 2, 3]).findOne({ $lt: 3 }), 1, 'passed');
+		assert.expect(3);
+		var m = Mangler([1, 2, 3]);
+		var m1 = m.findOne({ $lt: 3 });
+
+		assert.deepEqual(m1.items, [1], 'passed');
+		assert.notStrictEqual(m, m1, 'reference check');
+		assert.strictEqual(m1.end(), m, 'end check');
 	});
 
 	QUnit.test('.first', function(assert) {

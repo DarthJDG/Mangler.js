@@ -1060,13 +1060,25 @@ var Mangler = (function(global) {
 			return this;
 		},
 
+		end: function() {
+			return this.parent || this;
+		},
+
+		endAll: function() {
+			var ret = this;
+			while(ret.parent) ret = ret.parent;
+			return ret;
+		},
+
 		explore: function(callback, state) {
 			fn.explore(this.items, callback, state);
 			return this;
 		},
 
 		extract: function(filter, options) {
-			return fn.extract(this.items, filter, options);
+			var m = new ManglerObject(fn.extract(this.items, filter, options));
+			m.parent = this;
+			return m;
 		},
 
 		filter: function(cond) {
@@ -1075,11 +1087,15 @@ var Mangler = (function(global) {
 		},
 
 		find: function(cond) {
-			return fn.find(this.items, cond);
+			var m = new ManglerObject(fn.find(this.items, cond));
+			m.parent = this;
+			return m;
 		},
 
 		findOne: function(cond) {
-			return fn.first(this.items, cond);
+			var m = new ManglerObject(fn.first(this.items, cond));
+			m.parent = this;
+			return m;
 		},
 
 		first: function(cond) {
