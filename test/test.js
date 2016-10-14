@@ -1244,14 +1244,30 @@
 	});
 
 	QUnit.test('.remove', function(assert) {
+		assert.expect(6);
+
+		var m = Mangler(['A', 'B', 'C']);
+
+		assert.deepEqual(m.remove(1).items, ['A', 'C'], 'passed');
+		assert.deepEqual(m.remove(2).items, ['A', 'C'], 'passed');
+		assert.deepEqual(m.remove(0).items, ['C'], 'passed');
+		assert.deepEqual(m.remove(0).items, [], 'passed');
+
+		m = Mangler([1, 2, 3, 4, 5]);
+
+		assert.deepEqual(m.remove({ $gt: 1, $lt: 4 }).items, [1, 4, 5], 'passed');
+		assert.deepEqual(m.remove(function(v) { return v == 4 }).items, [1, 5], 'passed');
+	});
+
+	QUnit.test('.removeItem', function(assert) {
 		assert.expect(4);
 
 		var m = Mangler(['A', 'B', 'C']);
 
-		assert.deepEqual(m.remove('B').items, ['A', 'C'], 'passed');
-		assert.deepEqual(m.remove('D').items, ['A', 'C'], 'passed');
-		assert.deepEqual(m.remove('A').items, ['C'], 'passed');
-		assert.deepEqual(m.remove('C').items, [], 'passed');
+		assert.deepEqual(m.removeItem('B').items, ['A', 'C'], 'passed');
+		assert.deepEqual(m.removeItem('D').items, ['A', 'C'], 'passed');
+		assert.deepEqual(m.removeItem('A').items, ['C'], 'passed');
+		assert.deepEqual(m.removeItem('C').items, [], 'passed');
 	});
 
 	QUnit.test('.rename', function(assert) {

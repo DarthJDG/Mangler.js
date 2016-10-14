@@ -1141,7 +1141,16 @@ var Mangler = (function(global) {
 			return this;
 		},
 
-		remove: function(item) {
+		remove: function(key) {
+			if(fn.isObject(key) || typeof key === 'function') {
+				fn.filter(this.items, { $not: key });
+			} else {
+				this.items.splice(key, 1);
+			}
+			return this;
+		},
+
+		removeItem: function(item) {
 			var i = this.items.indexOf(item);
 			if(i > -1) this.items.splice(i, 1);
 			return this;
